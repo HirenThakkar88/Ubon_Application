@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "235935560901",
+    "project_id": "ubon-8822",
+    "storage_bucket": "ubon-8822.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:235935560901:android:4720a70deb25e7fcb3acac",
+        "android_client_info": {
+          "package_name": "com.example.ubon_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMXs8KtY6u0UCxjisFWQO6OMde3jRf6kw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
