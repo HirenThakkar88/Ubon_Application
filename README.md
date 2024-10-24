@@ -1,6 +1,6 @@
 # Ubon Application
 
-**Ubon Application** is a modern e-commerce platform built with Flutter and Firebase to offer users a seamless shopping experience. It supports features like product browsing, cart management, secure payments, and real-time notifications.
+**Ubon Application** is an e-commerce platform designed to offer users a seamless online shopping experience. Built with a robust and scalable architecture, this project enables customers to browse products, add items to their cart, and securely complete transactions.
 
 ## Features
 
