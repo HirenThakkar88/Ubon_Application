@@ -1,13 +1,32 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import SystemChrome
+import 'package:ubon_application/screens/firebase_Auth.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/social_button.dart';
 import 'forgot_password.dart'; // Import the forgot password screen
 import 'home_screen.dart';
 import 'sign_up_screen.dart'; // Import the sign-up screen
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _auth = Authservice();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _email.dispose();
+    _password.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +91,7 @@ class LoginScreen extends StatelessWidget {
                 label: 'Email',
                 hintText: 'abcd@gmail.com',
                 textStyle: const TextStyle(fontFamily: 'Lora'),
+                controller: _email,
               ),
               const SizedBox(height: 20),
               CustomTextField(
@@ -79,6 +99,7 @@ class LoginScreen extends StatelessWidget {
                 hintText: 'Password',
                 isPassword: true,
                 textStyle: const TextStyle(fontFamily: 'Lora'),
+                controller: _password,
               ),
               const SizedBox(height: 10),
               Align(
@@ -117,13 +138,7 @@ class LoginScreen extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) =>  HomeScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFCC00),
                       padding: const EdgeInsets.symmetric(vertical: 15),
@@ -189,5 +204,17 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  goToHome(BuildContext context) => Navigator.push(
+      context, MaterialPageRoute(builder: (context) => HomeScreen()));
+
+  _login() async {
+    final user =
+        await _auth.LoginUserWithEmailAndPassword(_email.text, _password.text);
+    if (user != null) {
+      log("Logedin Success");
+      goToHome(context);
+    }
   }
 }

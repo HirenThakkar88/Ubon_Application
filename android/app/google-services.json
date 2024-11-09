@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "235935560901",
     "project_id": "ubon-8822",
-    "storage_bucket": "ubon-8822.appspot.com"
+    "storage_bucket": "ubon-8822.firebasestorage.app"
   },
   "client": [
     {
@@ -12,7 +12,12 @@
           "package_name": "com.example.ubon_application"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "235935560901-3ere23jrmqtm7lc2cr68kd4sde4h43qm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCMXs8KtY6u0UCxjisFWQO6OMde3jRf6kw"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "235935560901-3ere23jrmqtm7lc2cr68kd4sde4h43qm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "235935560901-s6gg0fcp1hng2sfe06ljinp5rrcfq0c5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ubonApplication"
+              }
+            }
+          ]
         }
       }
     }

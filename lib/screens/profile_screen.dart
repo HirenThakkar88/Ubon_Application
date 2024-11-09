@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:ubon_application/screens/firebase_Auth.dart';
+import 'package:ubon_application/screens/login_screen.dart';
 import 'package:ubon_application/screens/payment_method_screen.dart';
 import 'package:ubon_application/widgets/custom_bottom_nav_bar.dart';
-
 import 'ShippingAddressScreen.dart';
 
 class ProfileScreen extends StatelessWidget {
   int _selectedIndex = 4;
-  // const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    Authservice _auth = Authservice();
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -92,7 +93,7 @@ class ProfileScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => const ShippingAddressScreen()),
-                    ); // Navigate to Shipping Addresses page
+                    );
                   },
                 ),
                 _buildProfileOption(
@@ -105,8 +106,7 @@ class ProfileScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => const PaymentMethodsScreen()),
-                    ); //
-                    // Navigate to Payment Methods page
+                    );
                   },
                 ),
                 _buildProfileOption(
@@ -134,6 +134,45 @@ class ProfileScreen extends StatelessWidget {
                   icon: Icons.settings_outlined,
                   onTap: () {
                     // Navigate to Settings page
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Sign Out'),
+                          content:
+                              const Text('Are you sure you want to sign out?'),
+                          actions: [
+                            TextButton(
+                              child: const Text('Cancel'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('OK'),
+                              onPressed: () async {
+                                await _auth.signout();
+                                goToLogin(context);
+                                // Place your sign-out code here
+                                // Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   },
                 ),
               ],
@@ -166,4 +205,7 @@ class ProfileScreen extends StatelessWidget {
       onTap: onTap,
     );
   }
+
+  goToLogin(BuildContext context) => Navigator.push(
+      context, MaterialPageRoute(builder: (context) => const LoginScreen()));
 }

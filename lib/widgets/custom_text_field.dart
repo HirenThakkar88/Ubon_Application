@@ -5,6 +5,8 @@ class CustomTextField extends StatefulWidget {
   final String hintText;
   final bool isPassword;
   final TextStyle textStyle;
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
 
   const CustomTextField({
     Key? key,
@@ -12,6 +14,8 @@ class CustomTextField extends StatefulWidget {
     required this.hintText,
     this.isPassword = false,
     required this.textStyle,
+    this.controller,
+    this.validator,
   }) : super(key: key);
 
   @override
@@ -19,32 +23,34 @@ class CustomTextField extends StatefulWidget {
 }
 
 class _CustomTextFieldState extends State<CustomTextField> {
-  bool _obscureText = true; // Track if the password is hidden or shown
+  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      controller: widget.controller,
+      validator: widget.validator,
       obscureText: widget.isPassword ? _obscureText : false,
-      style: widget.textStyle.copyWith(fontWeight: FontWeight.bold), // Make input text bold
+      style: widget.textStyle.copyWith(fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hintText,
-        labelStyle: widget.textStyle, // Label text style
+        labelStyle: widget.textStyle,
         hintStyle: widget.textStyle.copyWith(
-          fontWeight: FontWeight.normal, // Ensure hint text is not bold
+          fontWeight: FontWeight.normal,
           color: Colors.grey,
         ),
         suffixIcon: widget.isPassword
             ? IconButton(
-          icon: Icon(
-            _obscureText ? Icons.visibility_off : Icons.visibility,
-          ),
-          onPressed: () {
-            setState(() {
-              _obscureText = !_obscureText; // Toggle password visibility
-            });
-          },
-        )
+                icon: Icon(
+                  _obscureText ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscureText = !_obscureText;
+                  });
+                },
+              )
             : null,
         border: const OutlineInputBorder(),
       ),
