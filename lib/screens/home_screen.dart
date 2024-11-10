@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import SystemChrome
 import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
-import 'shop_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   //const HomeScreen({Key? key}) : super(key: key);

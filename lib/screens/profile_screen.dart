@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import 'package:ubon_application/screens/login_screen.dart';
 import 'package:ubon_application/screens/payment_method_screen.dart';
@@ -9,11 +8,6 @@ import 'ShippingAddressScreen.dart';
 class ProfileScreen extends StatelessWidget {
   int _selectedIndex = 4;
 
-// Future<void> _logout(BuildContext context) async {
-//     final prefs = await SharedPreferences.getInstance();
-//     await prefs.remove('isLoggedIn'); // Remove the login state
-    
-    // goToLogin(context);
   
   void goToLogin(BuildContext context) {
     Navigator.pushReplacement(
