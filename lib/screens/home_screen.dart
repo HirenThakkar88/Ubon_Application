@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import SystemChrome
+import 'package:ubon_application/screens/shop_screen.dart';
 import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
 
 class HomeScreen extends StatelessWidget {
@@ -50,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Item sale',
+                        'All Products',
                         style: TextStyle(
                           fontFamily: 'Lora',
                           fontSize: 40,
@@ -62,7 +63,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () {
-                          print('Check button pressed!');
+                          goToProduct(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(
@@ -359,4 +360,6 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+   goToProduct(BuildContext context) => Navigator.push(
+  context, MaterialPageRoute(builder: (context) => const ShopScreen()));
 }

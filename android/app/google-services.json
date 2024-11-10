@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "235935560901-3ere23jrmqtm7lc2cr68kd4sde4h43qm.apps.googleusercontent.com",
+          "client_id": "235935560901-hcntlu6qdo79i87aa3d9eml5i09idsus.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ubon_application",
+            "certificate_hash": "d7645aee2e11ed199f9870c01fa96978bae8df51"
+          }
+        },
+        {
+          "client_id": "235935560901-7c1gsa252jjheri8k8gcu8gbjcqs3mot.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

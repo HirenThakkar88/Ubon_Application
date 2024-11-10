@@ -46,7 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '235935560901',
     projectId: 'ubon-8822',
     authDomain: 'ubon-8822.firebaseapp.com',
-    storageBucket: 'ubon-8822.appspot.com',
+    storageBucket: 'ubon-8822.firebasestorage.app',
     measurementId: 'G-51754JQK0W',
   );
 
@@ -55,7 +55,7 @@ class DefaultFirebaseOptions {
     appId: '1:235935560901:android:4720a70deb25e7fcb3acac',
     messagingSenderId: '235935560901',
     projectId: 'ubon-8822',
-    storageBucket: 'ubon-8822.appspot.com',
+    storageBucket: 'ubon-8822.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -63,7 +63,9 @@ class DefaultFirebaseOptions {
     appId: '1:235935560901:ios:9c5db4eec7166dceb3acac',
     messagingSenderId: '235935560901',
     projectId: 'ubon-8822',
-    storageBucket: 'ubon-8822.appspot.com',
+    storageBucket: 'ubon-8822.firebasestorage.app',
+    androidClientId: '235935560901-hcntlu6qdo79i87aa3d9eml5i09idsus.apps.googleusercontent.com',
+    iosClientId: '235935560901-s6gg0fcp1hng2sfe06ljinp5rrcfq0c5.apps.googleusercontent.com',
     iosBundleId: 'com.example.ubonApplication',
   );
 
@@ -72,7 +74,9 @@ class DefaultFirebaseOptions {
     appId: '1:235935560901:ios:9c5db4eec7166dceb3acac',
     messagingSenderId: '235935560901',
     projectId: 'ubon-8822',
-    storageBucket: 'ubon-8822.appspot.com',
+    storageBucket: 'ubon-8822.firebasestorage.app',
+    androidClientId: '235935560901-hcntlu6qdo79i87aa3d9eml5i09idsus.apps.googleusercontent.com',
+    iosClientId: '235935560901-s6gg0fcp1hng2sfe06ljinp5rrcfq0c5.apps.googleusercontent.com',
     iosBundleId: 'com.example.ubonApplication',
   );
 
@@ -82,7 +86,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '235935560901',
     projectId: 'ubon-8822',
     authDomain: 'ubon-8822.firebaseapp.com',
-    storageBucket: 'ubon-8822.appspot.com',
+    storageBucket: 'ubon-8822.firebasestorage.app',
     measurementId: 'G-8D3G4KP3Y4',
   );
 

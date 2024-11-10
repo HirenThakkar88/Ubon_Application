@@ -18,7 +18,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _auth = Authservice();
+  //final _auth = Authservice();
+  final Authservice _auth = new Authservice();
+  bool isLoading = false;
   final _email = TextEditingController();
   final _password = TextEditingController();
 
@@ -177,13 +179,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+              // ElevatedButton(
+              //   onPressed: () async {},
+              //   child: Text("data"),
+              // ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  SocialButton(imagePath: 'assets/images/google_icon.png'),
-                  SizedBox(width: 30),
-                  SocialButton(imagePath: 'assets/images/facebook_icon.png'),
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      await _auth.signInWithGoogle();
+                      // setState(() {
+                      //   isLoading = true;
+                      // });
+                      // setState(() {
+                      //   isLoading = false;
+                      // });
+                    },
+                    child: const SocialButton(
+                        imagePath: 'assets/images/google_icon.png'),
+                  ),
+                  const SizedBox(width: 30),
+                  const SocialButton(
+                      imagePath: 'assets/images/facebook_icon.png'),
                 ],
               ),
               const SizedBox(height: 20),

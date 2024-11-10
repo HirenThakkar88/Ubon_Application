@@ -11,7 +11,7 @@ class SocialButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+     // onTap: () {},
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
