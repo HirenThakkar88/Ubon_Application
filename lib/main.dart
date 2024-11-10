@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:ubon_application/firebase_options.dart';
+import 'package:ubon_application/screens/wrapper.dart';
 import 'screens/login_screen.dart';
 
 void main() async {
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'lora',
         primarySwatch: Colors.yellow,
       ),
-      home: const LoginScreen(),
+      home: const Wrapper(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import SystemChrome
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/social_button.dart';
@@ -61,21 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 60),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Icon(Icons.arrow_back, color: Colors.black)),
-                    /* SizedBox(
-                      width: 100,
-                    ),
-                    Center(child: Text('Login')),*/
-                  ],
-                ),
+              const Padding(
+                padding: EdgeInsets.only(top: 85),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -206,15 +194,37 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  goToHome(BuildContext context) => Navigator.push(
-      context, MaterialPageRoute(builder: (context) => HomeScreen()));
-
-  _login() async {
+  Future<void> _login() async {
     final user =
         await _auth.LoginUserWithEmailAndPassword(_email.text, _password.text);
     if (user != null) {
-      log("Logedin Success");
+      log("Login Successful");
+
+      // Save login state to shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+
+      // ignore: use_build_context_synchronously
       goToHome(context);
     }
   }
+
+  void goToHome(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
+  }
+
+  // goToHome(BuildContext context) => Navigator.push(
+  //     context, MaterialPageRoute(builder: (context) => HomeScreen()));
+
+  // _login() async {
+  //   final user =
+  //       await _auth.LoginUserWithEmailAndPassword(_email.text, _password.text);
+  //   if (user != null) {
+  //     log("Logedin Success");
+  //     goToHome(context);
+  //   }
+  // }
 }
