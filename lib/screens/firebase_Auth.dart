@@ -8,15 +8,16 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/main.dart';
 import 'package:ubon_application/screens/home_screen.dart';
+import 'package:ubon_application/screens/wrapper.dart';
 
 class Authservice {
-  final _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-   Future<Map<String, String>?> signInWithGoogle() async {
-  
-  // goToHome(BuildContext context) => Navigator.of(context).pushReplacement(
-  //             MaterialPageRoute(builder: (context) => HomeScreen()),
-  //           );
+  Future<Map<String, String>?> signInWithGoogle() async {
+    // goToHome(BuildContext context) => Navigator.of(context).pushReplacement(
+    //             MaterialPageRoute(builder: (context) => HomeScreen()),
+    //           );
 
     try {
       // Perform the Google sign-in
@@ -129,29 +130,29 @@ class Authservice {
     }
   }
 
-  Future<UserCredential?> LoginWithGoogle() async {
-    try {
-      final googleUser = await GoogleSignIn().signIn();
-      final googleAuth = await googleUser?.authentication;
-      final cred = GoogleAuthProvider.credential(
-          idToken: googleAuth?.idToken, accessToken: googleAuth?.accessToken);
-
-      return await _auth.signInWithCredential(cred);
-    } catch (e) {
-      print(e.toString());
-    }
-    return null;
-  }
-
   Future<User?> createUserWithEmailAndPassword(
-      String email, String password) async {
+      String email, String password, String fullName, String userType) async {
     try {
+      // Create user with Firebase Authentication
       final cred = await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
+        email: email,
+        password: password,
+      );
+
+      // If user creation is successful, save user info to Firestore
+      if (cred.user != null) {
+        await _firestore.collection('authentication').doc(cred.user!.uid).set({
+          'auth_id': cred.user!.uid,
+          'email': email,
+          'name': fullName,
+          'password': password, // Storing the password as is
+          'user_type': 'basic user',
+        });
+      }
+
       return cred.user;
     } catch (e) {
-      //print("something went wrong");
-      log("Something went wrong");
+      log("Error creating user: $e");
     }
     return null;
   }
@@ -159,23 +160,58 @@ class Authservice {
   Future<User?> LoginUserWithEmailAndPassword(
       String email, String password) async {
     try {
-      final cred = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
-      return cred.user;
+      // Fetch user data from Firestore
+      final snapshot = await _firestore
+          .collection('authentication')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // Get the first matching document
+        final doc = snapshot.docs.first;
+        final storedPassword = doc['password']; // Password from Firestore
+
+        if (storedPassword == password) {
+          // If password matches, sign in with Firebase Authentication
+          final cred = await _auth.signInWithEmailAndPassword(
+              email: email, password: password);
+          return cred.user;
+        } else {
+          log("Incorrect password");
+          return null; // Password does not match
+        }
+      } else {
+        log("User not found");
+        return null; // Email not found in Firestore
+      }
     } catch (e) {
-      //print("something went wrong");
-      log("Something went wrong");
+      log("Something went wrong: $e");
+      return null;
     }
-    return null;
   }
 
-  Future<void> signout() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('isLoggedIn');
-      await _auth.signOut();
-    } catch (e) {
-      log("Something went wrong");
-    }
+  
+Future<void> signout() async {
+  try {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    
+    // Sign out from Google
+    await googleSignIn.signOut();
+    
+    // Sign out from Firebase
+    await FirebaseAuth.instance.signOut();
+    
+    // Clear shared preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('email');
+    await prefs.remove('auth_id');
+    // Optionally, clear 'isLoggedIn' flag if it's set
+    await prefs.remove('isLoggedIn');
+    
+    // If you want to show the login screen or perform any other navigation, 
+    // you can do it here
+  } catch (e) {
+    log("Error during signout: $e");
   }
+}
 }

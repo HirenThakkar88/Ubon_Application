@@ -217,12 +217,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
   goToHome(BuildContext context) => Navigator.push(
       context, MaterialPageRoute(builder: (context) => HomeScreen()));
 
-  _signup() async {
+ _signup() async {
+  final fullName = _fullNameController.text.trim();
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
+  final userType = 'regular';  // You can customize this as per your requirement
+
+  if (_formKey.currentState?.validate() ?? false) {
     final user = await _auth.createUserWithEmailAndPassword(
-        _emailController.text, _passwordController.text);
+        email, password, fullName, userType);
+
     if (user != null) {
-      log("User created");
+      log("User created and data saved in Firestore");
       goToHome(context);
+    } else {
+      log("Error creating user");
     }
   }
+}
 }

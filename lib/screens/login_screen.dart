@@ -1,7 +1,6 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import SystemChrome
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import '../widgets/custom_text_field.dart';
@@ -18,8 +17,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  //final _auth = Authservice();
-  final Authservice _auth = new Authservice();
+  final Authservice _auth = Authservice();
   bool isLoading = false;
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -37,88 +35,59 @@ class _LoginScreenState extends State<LoginScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge,
         overlays: [SystemUiOverlay.top]);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor:
-          Color.fromARGB(0, 255, 255, 255), // Semi-transparent black
-      statusBarIconBrightness: Brightness.dark, // Icon color to dark
-      statusBarBrightness: Brightness.dark, // Status bar text color to dark
-      systemNavigationBarColor:
-          Colors.transparent, // Transparent navigation bar
-      systemNavigationBarIconBrightness:
-          Brightness.light, // Navigation icons light
+      statusBarColor: Color.fromARGB(0, 255, 255, 255),
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.light,
     ));
 
     return Scaffold(
-      // appBar: AppBar(
-      //   leading: IconButton(
-      //     icon: const Icon(Icons.arrow_back, color: Colors.black),
-      //     onPressed: () {
-      //       Navigator.of(context).pop(); // Navigate back
-      //     },
-      //   ),
-      //   backgroundColor: Colors.transparent,
-      //   elevation: 0,
-      // ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 85),
-              ),
+              const Padding(padding: EdgeInsets.only(top: 85)),
               const SizedBox(height: 20),
-              const Text(
-                'Login',
-                style: TextStyle(
-                  fontFamily: 'Lora',
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text('Login',
+                  style: TextStyle(
+                      fontFamily: 'Lora',
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold)),
               const SizedBox(height: 30),
               CustomTextField(
-                label: 'Email',
-                hintText: 'abcd@gmail.com',
-                textStyle: const TextStyle(fontFamily: 'Lora'),
-                controller: _email,
-              ),
+                  label: 'Email',
+                  hintText: 'abcd@gmail.com',
+                  textStyle: const TextStyle(fontFamily: 'Lora'),
+                  controller: _email),
               const SizedBox(height: 20),
               CustomTextField(
-                label: 'Password',
-                hintText: 'Password',
-                isPassword: true,
-                textStyle: const TextStyle(fontFamily: 'Lora'),
-                controller: _password,
-              ),
+                  label: 'Password',
+                  hintText: 'Password',
+                  isPassword: true,
+                  textStyle: const TextStyle(fontFamily: 'Lora'),
+                  controller: _password),
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const ForgotPasswordScreen(),
-                      ),
-                    );
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordScreen()));
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Forgot your password?',
-                        style: TextStyle(
-                          fontFamily: 'Lora',
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      const Text('Forgot your password?',
+                          style: TextStyle(
+                              fontFamily: 'Lora',
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold)),
                       const SizedBox(width: 5),
-                      const Icon(
-                        Icons.arrow_forward,
-                        color: Colors.red,
-                        size: 18, // Ensure a standard size for the icon
-                      ),
+                      const Icon(Icons.arrow_forward,
+                          color: Colors.red, size: 18),
                     ],
                   ),
                 ),
@@ -133,18 +102,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: const Color(0xFFFFCC00),
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
+                          borderRadius: BorderRadius.circular(25)),
                     ),
-                    child: const Text(
-                      'LOGIN',
-                      style: TextStyle(
-                        fontFamily: 'Lora',
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: const Text('LOGIN',
+                        style: TextStyle(
+                            fontFamily: 'Lora',
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),
@@ -152,54 +117,33 @@ class _LoginScreenState extends State<LoginScreen> {
               Center(
                 child: TextButton(
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SignUpScreen(),
-                      ),
-                    );
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const SignUpScreen()));
                   },
-                  child: const Text(
-                    "Don't have an account? Sign up here",
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: const Text("Don't have an account? Sign up here",
+                      style: TextStyle(
+                          fontFamily: 'Lora',
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 120),
               const Center(
-                child: Text(
-                  'Or login with social account',
-                  style: TextStyle(
-                    fontFamily: 'Lora',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              // ElevatedButton(
-              //   onPressed: () async {},
-              //   child: Text("data"),
-              // ),
+                  child: Text('Or login with social account',
+                      style: TextStyle(
+                          fontFamily: 'Lora',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold))),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () async {
-                      await _auth.signInWithGoogle();
-                      // setState(() {
-                      //   isLoading = true;
-                      // });
-                      // setState(() {
-                      //   isLoading = false;
-                      // });
-                    },
-                    child: const SocialButton(
-                        imagePath: 'assets/images/google_icon.png'),
-                  ),
+                      onTap: () async {
+                        await _auth.signInWithGoogle();
+                      },
+                      child: const SocialButton(
+                          imagePath: 'assets/images/google_icon.png')),
                   const SizedBox(width: 30),
                   const SocialButton(
                       imagePath: 'assets/images/facebook_icon.png'),
@@ -214,8 +158,34 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (_email.text.isEmpty || _password.text.isEmpty) {
+      // Show a SnackBar for empty fields
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in both email and password'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return; // Prevent further action if fields are empty
+    }
+
+    // Simple email validation regex
+    final emailRegex =
+        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    if (!emailRegex.hasMatch(_email.text)) {
+      // Show SnackBar for invalid email format
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid email address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final user =
         await _auth.LoginUserWithEmailAndPassword(_email.text, _password.text);
+
     if (user != null) {
       log("Login Successful");
 
@@ -223,8 +193,21 @@ class _LoginScreenState extends State<LoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
 
-      // ignore: use_build_context_synchronously
+      // Navigate to home screen
       goToHome(context);
+    } else {
+      log("Login failed");
+      // Show 'Not Registered' message in SnackBar for 2 seconds
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Not Registered',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.black,
+          duration: const Duration(seconds: 2), // Show for 2 seconds
+        ),
+      );
     }
   }
 
@@ -234,16 +217,4 @@ class _LoginScreenState extends State<LoginScreen> {
       MaterialPageRoute(builder: (context) => HomeScreen()),
     );
   }
-
-  // goToHome(BuildContext context) => Navigator.push(
-  //     context, MaterialPageRoute(builder: (context) => HomeScreen()));
-
-  // _login() async {
-  //   final user =
-  //       await _auth.LoginUserWithEmailAndPassword(_email.text, _password.text);
-  //   if (user != null) {
-  //     log("Logedin Success");
-  //     goToHome(context);
-  //   }
-  // }
 }
