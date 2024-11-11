@@ -33,7 +33,7 @@ class EmailService {
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
           }
           .header {
-            background-color: #7f3dff;
+            background-color: #0xFFFFCC00;
             color: white;
             padding: 40px 0 30px;
             border-radius: 8px 8px 0 0;
@@ -60,7 +60,7 @@ class EmailService {
             font-size: 18px;
           }
           .footer {
-            background-color: #7f3dff;
+            background-color: #0xFFFFCC00;
             padding: 20px;
             text-align: center;
             color: white;
@@ -85,7 +85,7 @@ class EmailService {
       <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #0xFFFFCC00;">
         <div class="container">
           <div class="header">
-            <img src="https://raw.githubusercontent.com/sarthak-dhaduk/PayWise/master/assets/img/logo2.png" alt="Shree Logo" class="logo"/>
+            <img src="https://raw.githubusercontent.com/HirenThakkar88/Ubon_Application/refs/heads/master/assets/images/shreelogo.jpg" alt="Shree Logo" class="logo"/>
             <h1>Shree</h1>
           </div>
           <div class="content">
