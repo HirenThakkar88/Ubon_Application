@@ -3,21 +3,18 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/main.dart';
+import 'package:ubon_application/screens/SetPassword.dart';
 import 'package:ubon_application/screens/home_screen.dart';
-import 'package:ubon_application/screens/wrapper.dart';
 
 class Authservice {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<Map<String, String>?> signInWithGoogle() async {
-    // goToHome(BuildContext context) => Navigator.of(context).pushReplacement(
-    //             MaterialPageRoute(builder: (context) => HomeScreen()),
-    //           );
+    
 
     try {
       // Perform the Google sign-in
@@ -91,7 +88,7 @@ class Authservice {
 
             if (currentContext != null) {
               Navigator.of(currentContext).pushReplacement(
-                MaterialPageRoute(builder: (context) => HomeScreen()),
+                MaterialPageRoute(builder: (context) => SetPassword(uid: uid)),
               );
             }
           });
@@ -113,7 +110,7 @@ class Authservice {
 
           if (currentContext != null) {
             Navigator.of(currentContext).pushReplacement(
-              MaterialPageRoute(builder: (context) => HomeScreen()),
+              MaterialPageRoute(builder: (context) => SetPassword(uid: uid)),
             );
           }
         });

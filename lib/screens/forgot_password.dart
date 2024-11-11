@@ -1,193 +1,160 @@
+import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import SystemChrome
+import 'package:ubon_application/screens/VerificationPage.dart';
+import 'package:ubon_application/services/email_service.dart';
+import 'package:ubon_application/widgets/custom_loader.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
-
+class ForgotPasswordPage extends StatefulWidget {
   @override
-  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
+  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _emailController = TextEditingController();
-  bool _isEmailValid = true;
-  bool _isEmailEmpty = false;
-  bool _isTyping = false;
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Future<void> _sendOTP() async {
+    await CustomLoader.showLoaderForTask(
+        context: context,
+        task: () async {
+          String email = _emailController.text.trim();
 
-  // Email validation function
-  bool _validateEmail(String email) {
-    if (email.isEmpty) {
-      setState(() {
-        _isEmailEmpty = true;
-      });
-      return false;
-    }
+          // Check if email exists in authentication collection
+          QuerySnapshot snapshot = await _firestore
+              .collection('authentication')
+              .where('email', isEqualTo: email)
+              .get();
 
-    // Simple email validation and checks if email ends with @gmail.com
-    bool isValid = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email) && email.endsWith('@gmail.com');
-    setState(() {
-      _isEmailValid = isValid;
-      _isEmailEmpty = false;
-    });
-    return isValid;
-  }
+          if (snapshot.docs.isNotEmpty) {
+            // Generate a 6-digit OTP
+            String otp = (Random().nextInt(900000) + 100000).toString();
 
-  void _clearEmail() {
-    _emailController.clear(); // Clear the email input
-    setState(() {
-      _isEmailValid = true; // Reset email validation to valid (black border)
-      _isEmailEmpty = false;
-      _isTyping = false; // Reset typing status when cleared
-    });
-  }
+            // Save OTP in recovery collection
+            await _firestore.collection('recovery').add({
+              'email': email,
+              'otp': otp,
+              'timestamp': FieldValue.serverTimestamp(),
+            });
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
+            // Send OTP to user's email
+            await EmailService.sendOTP(email, otp);
+
+            // Redirect to OTP verification page
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => VerificationPage(email: email),
+              ),
+            );
+          } else {
+            // Show error if email is not registered
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Email not found')),
+            );
+          }
+        });
   }
 
   @override
   Widget build(BuildContext context) {
-    // SystemChrome configurations
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge,
-        overlays: [SystemUiOverlay.top]);
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Color.fromARGB(0, 255, 255, 255), // Semi-transparent white
-      statusBarIconBrightness: Brightness.dark, // Icon color to dark
-      statusBarBrightness: Brightness.dark, // Status bar text color to dark
-      systemNavigationBarColor: Colors.transparent, // Transparent navigation bar
-      systemNavigationBarIconBrightness: Brightness.light, // Navigation icons light
-    ));
+    var screenHeight = MediaQuery.of(context).size.height;
+    var screenWidth = MediaQuery.of(context).size.width;
+    var keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true, // Prevents bottom overflow
+      appBar: AppBar(
+        title: Text(
+          "Forgot Password",
+          style: TextStyle(
+            fontSize: screenHeight * 0.03,
+            fontFamily: 'Lora',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: GestureDetector(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: Icon(
+            Icons.arrow_back_ios_rounded,
+            size: screenHeight * 0.03,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60), // Adjust for padding from top
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Icon(Icons.arrow_back, color: Colors.black),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 40),
-              const Text(
-                'Forgot password',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontFamily: 'Lora',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Please, enter your email address. You will receive a link to create a new password via email.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                  fontFamily: 'Lora',
-                ),
-              ),
-              const SizedBox(height: 40),
-              TextFormField(
-                controller: _emailController,
-                style: TextStyle(
-                  fontFamily: 'Lora',
-                  fontWeight: _isTyping ? FontWeight.bold : FontWeight.normal, // Input text becomes bold when typing
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  labelStyle: TextStyle(
-                    color: _isEmailValid && !_isEmailEmpty
-                        ? Colors.black // Black if valid or no input yet
-                        : Colors.redAccent, // Red if invalid
-                    fontFamily: 'Lora',
-                  ),
-                  hintText: 'your@email.com',
-                  hintStyle: const TextStyle(
-                    color: Colors.black45,
-                    fontFamily: 'Lora',
-                    fontWeight: FontWeight.normal, // Ensure hint text remains normal
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: _isEmailValid && !_isEmailEmpty
-                          ? Colors.grey // Black if valid
-                          : Colors.redAccent, // Red if invalid
-                      width: 2.0,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: _isEmailValid && !_isEmailEmpty
-                          ? Colors.grey // Black if valid
-                          : Colors.redAccent, // Red if invalid
-                      width: 1.5,
-                    ),
-                  ),
-                  suffixIcon: _emailController.text.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.close, color: Colors.redAccent),
-                    onPressed: _clearEmail, // Clear email when close icon is tapped
-                  )
-                      : null,
-                ),
-                onChanged: (text) {
-                  setState(() {
-                    _isTyping = text.isNotEmpty; // Set to true when input is not empty
-                    if (text.isEmpty) _isEmailValid = true;
-                  });
-                },
-              ),
-              const SizedBox(height: 10),
-              if (!_isEmailValid && !_isEmailEmpty) // Show error only when email is invalid
-                const Text(
-                  'Email must end with @gmail.com',
+        padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: screenHeight - keyboardHeight,
+          ),
+          child: IntrinsicHeight(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                SizedBox(height: screenHeight * 0.2),
+                Text(
+                  "Don't worry.",
                   style: TextStyle(
-                    color: Colors.redAccent,
+                    fontSize: screenHeight * 0.03,
                     fontFamily: 'Lora',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Check if email is valid when SEND button is pressed
-                    if (_validateEmail(_emailController.text)) {
-                      print('Email is valid, proceed to send reset link');
-                      // Implement your sending logic here
-                    } else {
-                      print('Invalid email entered');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFFFFCC00), // Using your preferred button color
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                SizedBox(height: screenHeight * 0.01),
+                Text(
+                  "Enter your email and we’ll send you a link to reset your password.",
+                  style: TextStyle(
+                    fontSize: screenHeight * 0.02,
+                    fontFamily: 'Lora',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black54,
                   ),
-                  child: const Text(
-                    'SEND',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
+                ),
+                SizedBox(height: screenHeight * 0.05),
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    labelStyle: TextStyle(
+                      fontSize: screenHeight * 0.022,
                       fontFamily: 'Lora',
                       fontWeight: FontWeight.bold,
                     ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: screenHeight * 0.05),
+                ElevatedButton(
+                  onPressed: _sendOTP,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFCC00),
+                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: Text(
+                    "Continue",
+                    style: TextStyle(
+                      fontSize: screenHeight * 0.025,
+                      fontFamily: 'Lora',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

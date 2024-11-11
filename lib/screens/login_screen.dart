@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const ForgotPasswordScreen()));
+                        builder: (context) =>  ForgotPasswordPage()));
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

@@ -46,9 +46,9 @@ dependencies:
   google_sign_in: ^6.1.0
   shared_preferences: ^2.3.3
   cloud_firestore: ^5.4.5
-  flutter_custom_loader: ^1.0.0+1
   loading_animation_widget: ^1.3.0
   loader_overlay: ^4.0.3
+  mailer: ^6.2.0
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +81,8 @@ flutter:
       - assets/images/item_third.png
       - assets/images/item_fourth.png
       - assets/images/profile_pic.png
+      - assets/images/shreelogo.jpg
+
     fonts:
       - family: Lora
         fonts:
