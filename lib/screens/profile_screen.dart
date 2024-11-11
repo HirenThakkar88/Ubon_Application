@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import 'package:ubon_application/screens/login_screen.dart';
 import 'package:ubon_application/screens/payment_method_screen.dart';
@@ -8,7 +9,6 @@ import 'ShippingAddressScreen.dart';
 class ProfileScreen extends StatelessWidget {
   int _selectedIndex = 4;
 
-  
   void goToLogin(BuildContext context) {
     Navigator.pushReplacement(
       context,
@@ -171,7 +171,11 @@ class ProfileScreen extends StatelessWidget {
                               child: const Text('OK'),
                               onPressed: () async {
                                 await _auth.signout();
-                                goToLogin(context);
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                await prefs.remove('email');
+                                await prefs.remove('uid');
+                               goToLogin(context);
                                 // Place your sign-out code here
                                 // Navigator.of(context).pop();
                               },
