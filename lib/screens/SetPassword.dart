@@ -223,7 +223,7 @@ class _SetPasswordState extends State<SetPassword> {
                   fontFamily: 'Lora',
                   fontSize: screenHeight * 0.022,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
               ),
             ),

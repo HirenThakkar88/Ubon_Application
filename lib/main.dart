@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:ubon_application/firebase_options.dart';
+import 'package:ubon_application/screens/login_screen.dart';
 import 'package:ubon_application/screens/wrapper.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -34,7 +35,7 @@ class _MyAppState extends State<MyApp> {
         fontFamily: 'lora',
         primarySwatch: Colors.yellow,
       ),
-      home: const Wrapper(),
+      home:LoginScreen(),
     ),
     );
   }

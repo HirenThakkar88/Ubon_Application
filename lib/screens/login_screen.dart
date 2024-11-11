@@ -23,13 +23,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _authh = FirebaseAuth.instance;
   bool isLoading = false;
   final _email = TextEditingController();
-  
   final _password = TextEditingController();
   User? _user;
 
- @override
+  @override
   void initState() {
     super.initState();
+    // Check if the user is already logged in when the app starts
+    _checkLoggedInUser();
+
+    // Listen for changes in authentication state
     _authh.authStateChanges().listen((event) {
       setState(() {
         _user = event;
@@ -37,6 +40,29 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  void _checkLoginState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? email = prefs.getString('email');
+    final String? uid = prefs.getString('uid');
+
+    if (email != null && uid != null) {
+      // User is already logged in, navigate to HomeScreen
+      goToHome(context);
+    }
+  }
+
+
+  // Check for the saved login state from SharedPreferences
+  Future<void> _checkLoggedInUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? email = prefs.getString('email');
+    final String? uid = prefs.getString('uid');
+
+    if (email != null && uid != null) {
+      // User is already logged in, navigate to home screen
+      goToHome(context);
+    }
+  }
 
   @override
   void dispose() {
@@ -91,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) =>  ForgotPasswordPage()));
+                        builder: (context) => ForgotPasswordPage()));
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -173,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
- Future<void> _login() async {
+  Future<void> _login() async {
     await CustomLoader.showLoaderForTask(
       context: context,
       task: () async {
@@ -201,7 +227,6 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
   }
-
 
   void goToHome(BuildContext context) {
     Navigator.pushReplacement(

@@ -206,7 +206,7 @@ Future<void> signout() async {
     await prefs.remove('email');
     await prefs.remove('auth_id');
     // Optionally, clear 'isLoggedIn' flag if it's set
-    await prefs.remove('isLoggedIn');
+   // await prefs.remove('isLoggedIn');
     
     // If you want to show the login screen or perform any other navigation, 
     // you can do it here
