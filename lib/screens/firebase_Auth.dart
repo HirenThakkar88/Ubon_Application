@@ -17,7 +17,6 @@ class Authservice {
 
   Future<Map<String, String>?> signInWithGoogle() async {
     
-
     try {
       // Perform the Google sign-in
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -66,8 +65,8 @@ class Authservice {
         final userDoc = querySnapshot.docs.first;
         final password = userDoc['password'];
 
-        if (userDoc['user_type'] == null) {
-          await userDoc.reference.update({'user_type': 'basic user'});
+        if (userDoc['role'] == null) {
+          await userDoc.reference.update({'role': 'user'});
         }
 
         // If the password is not null, sign in and go to Home screen
@@ -102,7 +101,7 @@ class Authservice {
           'email': email,
           'name': displayName,
           'password': null, // Password initially set to null
-          'user_type': 'basic user',
+          'role': 'user',
         });
 
         // Redirect to SetPassword screen
@@ -145,7 +144,7 @@ class Authservice {
           'email': email,
           'name': fullName,
           'password': password, // Storing the password as is
-          'user_type': 'basic user',
+          'role': 'user',
         });
       }
 
@@ -171,9 +170,9 @@ class Authservice {
 
         // Check if the entered password matches the stored password
         if (userData['password'] == password) {
-          if (userData['user_type'] == null) {
+          if (userData['role'] == null) {
             await querySnapshot.docs.first.reference
-                .update({'user_type': 'basic user'});
+                .update({'role': 'user'});
           }
           // Return email and auth_id on success
           return {'email': userData['email'], 'auth_id': userData['auth_id']};

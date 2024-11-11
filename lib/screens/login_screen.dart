@@ -1,8 +1,10 @@
 import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ubon_application/admin/admin_dashboard_screen.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import 'package:ubon_application/widgets/custom_loader.dart';
 import '../widgets/custom_text_field.dart';
@@ -199,34 +201,61 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _login() async {
-    await CustomLoader.showLoaderForTask(
-      context: context,
-      task: () async {
-        try {
-          // Call login method from AuthService
-          final result = await _auth.loginWithEmailAndPassword(
-            _email.text,
-            _password.text,
-          );
+ Future<void> _login() async {
+  await CustomLoader.showLoaderForTask(
+    context: context,
+    task: () async {
+      try {
+        print("Entered email: ${_email.text}");
+        print("Entered password: ${_password.text}");
+        
+        // Firebase Authentication to check user credentials
+        final result = await _auth.loginWithEmailAndPassword(
+          _email.text,
+          _password.text,
+        );
+        
+        if (result != null) {
+          print('Firebase login result: $result');
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('email', result['email']!);
+          await prefs.setString('uid', result['auth_id']!);
+          
+          // Fetch user role from Firebase Firestore (authentication collection)
+          var userDoc = await FirebaseFirestore.instance
+              .collection('authentication')
+              .doc(result['auth_id']) // Using the user's auth_id
+              .get();
 
-          if (result != null) {
-            // Save user data to Shared Preferences
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('email', result['email']!);
-            await prefs.setString('uid', result['auth_id']!);
-
-            // Navigate to HomeScreen
-            goToHome(context);
+          if (userDoc.exists) {
+            var role = userDoc.data()?['role']; // Get role from the Firestore document
+            
+            if (role == 'admin') {
+              print('Admin login successful!');
+              // Navigate to Admin Dashboard
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => AdminDashboardScreen()),
+              );
+            } else if(role == 'user'){
+              print('User login successful!');
+              // Navigate to Home Screen for regular users
+              goToHome(context);
+            }
           } else {
-            print('Invalid credentials');
+            print('User document not found in Firestore.');
           }
-        } catch (error) {
-          print("Error during login: $error");
+        } else {
+          print('Invalid credentials');
         }
-      },
-    );
-  }
+      } catch (error) {
+        print("Error during login: $error");
+      }
+    },
+  );
+}
+
+
 
   void goToHome(BuildContext context) {
     Navigator.pushReplacement(
