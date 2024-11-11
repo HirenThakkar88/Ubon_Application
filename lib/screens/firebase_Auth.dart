@@ -12,6 +12,8 @@ import 'package:ubon_application/screens/home_screen.dart';
 class Authservice {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+   final String collectionName = 'authentication';
+
 
   Future<Map<String, String>?> signInWithGoogle() async {
     
@@ -154,39 +156,40 @@ class Authservice {
     return null;
   }
 
-  Future<User?> LoginUserWithEmailAndPassword(
+  Future<Map<String, String>?> loginWithEmailAndPassword(
       String email, String password) async {
     try {
-      // Fetch user data from Firestore
-      final snapshot = await _firestore
-          .collection('authentication')
+      // Fetch the document from Firestore by email
+      final querySnapshot = await _firestore
+          .collection(collectionName)
           .where('email', isEqualTo: email)
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        // Get the first matching document
-        final doc = snapshot.docs.first;
-        final storedPassword = doc['password']; // Password from Firestore
+      if (querySnapshot.docs.isNotEmpty) {
+        // Retrieve user data
+        final userData = querySnapshot.docs.first.data();
 
-        if (storedPassword == password) {
-          // If password matches, sign in with Firebase Authentication
-          final cred = await _auth.signInWithEmailAndPassword(
-              email: email, password: password);
-          return cred.user;
+        // Check if the entered password matches the stored password
+        if (userData['password'] == password) {
+          if (userData['user_type'] == null) {
+            await querySnapshot.docs.first.reference
+                .update({'user_type': 'basic user'});
+          }
+          // Return email and auth_id on success
+          return {'email': userData['email'], 'auth_id': userData['auth_id']};
         } else {
-          log("Incorrect password");
-          return null; // Password does not match
+          // Return null if password is incorrect
+          return null;
         }
       } else {
-        log("User not found");
-        return null; // Email not found in Firestore
+        // Return null if no user found with this email
+        return null;
       }
-    } catch (e) {
-      log("Something went wrong: $e");
-      return null;
+    } catch (error) {
+      log("Error during login: $error");
+      return null; // Return null in case of error
     }
   }
-
   
 Future<void> signout() async {
   try {

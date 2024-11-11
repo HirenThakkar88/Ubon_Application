@@ -1,8 +1,10 @@
 import 'dart:developer';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
+import 'package:ubon_application/widgets/custom_loader.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/social_button.dart';
 import 'forgot_password.dart'; // Import the forgot password screen
@@ -18,9 +20,23 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final Authservice _auth = Authservice();
+  final FirebaseAuth _authh = FirebaseAuth.instance;
   bool isLoading = false;
   final _email = TextEditingController();
+  
   final _password = TextEditingController();
+  User? _user;
+
+ @override
+  void initState() {
+    super.initState();
+    _authh.authStateChanges().listen((event) {
+      setState(() {
+        _user = event;
+      });
+    });
+  }
+
 
   @override
   void dispose() {
@@ -157,59 +173,35 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _login() async {
-    if (_email.text.isEmpty || _password.text.isEmpty) {
-      // Show a SnackBar for empty fields
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in both email and password'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return; // Prevent further action if fields are empty
-    }
+ Future<void> _login() async {
+    await CustomLoader.showLoaderForTask(
+      context: context,
+      task: () async {
+        try {
+          // Call login method from AuthService
+          final result = await _auth.loginWithEmailAndPassword(
+            _email.text,
+            _password.text,
+          );
 
-    // Simple email validation regex
-    final emailRegex =
-        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
-    if (!emailRegex.hasMatch(_email.text)) {
-      // Show SnackBar for invalid email format
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email address'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+          if (result != null) {
+            // Save user data to Shared Preferences
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('email', result['email']!);
+            await prefs.setString('uid', result['auth_id']!);
 
-    final user =
-        await _auth.LoginUserWithEmailAndPassword(_email.text, _password.text);
-
-    if (user != null) {
-      log("Login Successful");
-
-      // Save login state to shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-
-      // Navigate to home screen
-      goToHome(context);
-    } else {
-      log("Login failed");
-      // Show 'Not Registered' message in SnackBar for 2 seconds
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Not Registered',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.black,
-          duration: const Duration(seconds: 2), // Show for 2 seconds
-        ),
-      );
-    }
+            // Navigate to HomeScreen
+            goToHome(context);
+          } else {
+            print('Invalid credentials');
+          }
+        } catch (error) {
+          print("Error during login: $error");
+        }
+      },
+    );
   }
+
 
   void goToHome(BuildContext context) {
     Navigator.pushReplacement(
