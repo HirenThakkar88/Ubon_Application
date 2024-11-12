@@ -49,6 +49,7 @@ dependencies:
   loading_animation_widget: ^1.3.0
   loader_overlay: ^4.0.3
   mailer: ^6.2.0
+  fluttertoast: ^8.2.8
 
 dev_dependencies:
   flutter_test:
@@ -82,6 +83,7 @@ flutter:
       - assets/images/item_fourth.png
       - assets/images/profile_pic.png
       - assets/images/shreelogo.jpg
+      - assets/animations/splash.json
 
     fonts:
       - family: Lora

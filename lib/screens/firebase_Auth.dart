@@ -137,15 +137,19 @@ class Authservice {
         password: password,
       );
 
-      // If user creation is successful, save user info to Firestore
+      // If user creation is successful, save user inx`fo to Firestore
       if (cred.user != null) {
         await _firestore.collection('authentication').doc(cred.user!.uid).set({
+
           'auth_id': cred.user!.uid,
           'email': email,
           'name': fullName,
           'password': password, // Storing the password as is
           'role': 'user',
         });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('email', email);
+        await prefs.setString('uid', cred.user!.uid);
       }
 
       return cred.user;

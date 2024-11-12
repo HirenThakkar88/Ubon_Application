@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/admin/admin_dashboard_screen.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
@@ -20,6 +21,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+bool admin  =  false ;
 class _LoginScreenState extends State<LoginScreen> {
   final Authservice _auth = Authservice();
   final FirebaseAuth _authh = FirebaseAuth.instance;
@@ -141,8 +143,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _login,
+
+                    onPressed: (){
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      //
+                      if(_email.text.isEmpty && _password.text.isEmpty){
+                        Fluttertoast.showToast(msg: "Please enter both fields");
+                      }
+                      else if(_email.text.isEmpty){
+                        Fluttertoast.showToast(msg: "Please enter Email");
+                      }
+                      else if(_password.text.isEmpty){
+                        Fluttertoast.showToast(msg: "Please enter password");
+                      }
+                      else{
+                        _login();
+                      }
+                    },
+
                     style: ElevatedButton.styleFrom(
+
                       backgroundColor: const Color(0xFFFFCC00),
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
@@ -231,6 +251,10 @@ class _LoginScreenState extends State<LoginScreen> {
             var role = userDoc.data()?['role']; // Get role from the Firestore document
             
             if (role == 'admin') {
+              setState(() {
+                admin =  true;
+              });
+              await prefs.setString('admin', "true");
               print('Admin login successful!');
               // Navigate to Admin Dashboard
               Navigator.pushReplacement(
@@ -246,7 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
             print('User document not found in Firestore.');
           }
         } else {
-          print('Invalid credentials');
+         Fluttertoast.showToast(msg: "Invaliad User");
         }
       } catch (error) {
         print("Error during login: $error");

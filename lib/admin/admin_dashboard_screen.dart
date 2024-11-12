@@ -49,11 +49,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         leading: Icon(Icons.logout, color: Colors.red),
         title: Text('Sign Out', style: TextStyle(color: Colors.red)),
         onTap:  ()async {
+
+
                                 await _auth.signout();
                                 final prefs =
                                     await SharedPreferences.getInstance();
                                 await prefs.remove('email');
                                 await prefs.remove('uid');
+                                await prefs.setString('admin', "false");
                                goToLogin(context);
         },
       ),
