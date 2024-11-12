@@ -50,6 +50,9 @@ dependencies:
   loader_overlay: ^4.0.3
   mailer: ^6.2.0
   fluttertoast: ^8.2.8
+  firebase_storage: ^12.3.5
+  image_picker: ^1.1.2
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

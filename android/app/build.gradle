@@ -10,7 +10,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ubon_application"
+    namespace = "com.example.ubon"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "25.1.8937393"
 
@@ -24,7 +24,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.ubon_application"
+        applicationId = "com.example.ubon"
         // Updated minSdkVersion to 23 for firebase_auth compatibility
         minSdkVersion 23 
         targetSdk = flutter.targetSdkVersion

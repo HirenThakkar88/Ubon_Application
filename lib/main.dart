@@ -10,8 +10,8 @@ import 'package:loader_overlay/loader_overlay.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Initialize the bindings
-  await Firebase.initializeApp( 
-  options: DefaultFirebaseOptions.currentPlatform,
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );// Initialize Firebase (if you're using it)
   runApp(const MyApp()); // Start the app
 }
@@ -27,17 +27,17 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-   return GlobalLoaderOverlay(
-    child: MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: 'Login Page',
-      theme: ThemeData(
-        fontFamily: 'lora',
-        primarySwatch: Colors.yellow,
+    return GlobalLoaderOverlay(
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        title: 'Login Page',
+        theme: ThemeData(
+          fontFamily: 'lora',
+          primarySwatch: Colors.yellow,
+        ),
+        home:SplashScreen(),
       ),
-      home:SplashScreen(),
-    ),
     );
   }
 }

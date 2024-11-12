@@ -1,4 +1,4 @@
-package com.example.ubon_application
+package com.example.ubon
 
 import io.flutter.embedding.android.FlutterActivity
 

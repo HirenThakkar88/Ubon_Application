@@ -41,53 +41,53 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBtOHcxUrHtOuppMsa_xvyxQWshituW7b0',
-    appId: '1:235935560901:web:4e2d1b184612bf96b3acac',
-    messagingSenderId: '235935560901',
-    projectId: 'ubon-8822',
-    authDomain: 'ubon-8822.firebaseapp.com',
-    storageBucket: 'ubon-8822.firebasestorage.app',
-    measurementId: 'G-51754JQK0W',
+    apiKey: 'AIzaSyDmJkrvYCnbnvMcZNrA4oioMBbNHs91gAU',
+    appId: '1:596535302134:web:ec114c55b29c7610d819d7',
+    messagingSenderId: '596535302134',
+    projectId: 'meet-396d5',
+    authDomain: 'meet-396d5.firebaseapp.com',
+    storageBucket: 'meet-396d5.appspot.com',
+    measurementId: 'G-74PMDD7C9G',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCMXs8KtY6u0UCxjisFWQO6OMde3jRf6kw',
-    appId: '1:235935560901:android:4720a70deb25e7fcb3acac',
-    messagingSenderId: '235935560901',
-    projectId: 'ubon-8822',
-    storageBucket: 'ubon-8822.firebasestorage.app',
+    apiKey: 'AIzaSyAhJjaun8BF9H-F1xVlaZ5Vi4-7x_e_l2o',
+    appId: '1:596535302134:android:128efb8b6b758a13d819d7',
+    messagingSenderId: '596535302134',
+    projectId: 'meet-396d5',
+    storageBucket: 'meet-396d5.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCqQGWtzfQDLy3PCtSn86zASZYPXTqi1jA',
-    appId: '1:235935560901:ios:9c5db4eec7166dceb3acac',
-    messagingSenderId: '235935560901',
-    projectId: 'ubon-8822',
-    storageBucket: 'ubon-8822.firebasestorage.app',
-    androidClientId: '235935560901-hcntlu6qdo79i87aa3d9eml5i09idsus.apps.googleusercontent.com',
-    iosClientId: '235935560901-s6gg0fcp1hng2sfe06ljinp5rrcfq0c5.apps.googleusercontent.com',
+    apiKey: 'AIzaSyC66j4uwm7N-269jvs1Ao84ta3X8_58Sis',
+    appId: '1:596535302134:ios:0d3096889ddbabf5d819d7',
+    messagingSenderId: '596535302134',
+    projectId: 'meet-396d5',
+    storageBucket: 'meet-396d5.appspot.com',
+    androidClientId: '596535302134-vkgjnjqsvge37kcs6ecdungjil1vc5vj.apps.googleusercontent.com',
+    iosClientId: '596535302134-lsek24ir921uf29li61h4opb5qrlsg7f.apps.googleusercontent.com',
     iosBundleId: 'com.example.ubonApplication',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCqQGWtzfQDLy3PCtSn86zASZYPXTqi1jA',
-    appId: '1:235935560901:ios:9c5db4eec7166dceb3acac',
-    messagingSenderId: '235935560901',
-    projectId: 'ubon-8822',
-    storageBucket: 'ubon-8822.firebasestorage.app',
-    androidClientId: '235935560901-hcntlu6qdo79i87aa3d9eml5i09idsus.apps.googleusercontent.com',
-    iosClientId: '235935560901-s6gg0fcp1hng2sfe06ljinp5rrcfq0c5.apps.googleusercontent.com',
+    apiKey: 'AIzaSyC66j4uwm7N-269jvs1Ao84ta3X8_58Sis',
+    appId: '1:596535302134:ios:0d3096889ddbabf5d819d7',
+    messagingSenderId: '596535302134',
+    projectId: 'meet-396d5',
+    storageBucket: 'meet-396d5.appspot.com',
+    androidClientId: '596535302134-vkgjnjqsvge37kcs6ecdungjil1vc5vj.apps.googleusercontent.com',
+    iosClientId: '596535302134-lsek24ir921uf29li61h4opb5qrlsg7f.apps.googleusercontent.com',
     iosBundleId: 'com.example.ubonApplication',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBtOHcxUrHtOuppMsa_xvyxQWshituW7b0',
-    appId: '1:235935560901:web:8c9acaaf302c9ad9b3acac',
-    messagingSenderId: '235935560901',
-    projectId: 'ubon-8822',
-    authDomain: 'ubon-8822.firebaseapp.com',
-    storageBucket: 'ubon-8822.firebasestorage.app',
-    measurementId: 'G-8D3G4KP3Y4',
+    apiKey: 'AIzaSyDmJkrvYCnbnvMcZNrA4oioMBbNHs91gAU',
+    appId: '1:596535302134:web:7022750c1a24f8fbd819d7',
+    messagingSenderId: '596535302134',
+    projectId: 'meet-396d5',
+    authDomain: 'meet-396d5.firebaseapp.com',
+    storageBucket: 'meet-396d5.appspot.com',
+    measurementId: 'G-4TE5GSYJCW',
   );
 
 }

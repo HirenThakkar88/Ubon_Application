@@ -1,45 +1,45 @@
 {
   "project_info": {
-    "project_number": "235935560901",
-    "project_id": "ubon-8822",
-    "storage_bucket": "ubon-8822.firebasestorage.app"
+    "project_number": "596535302134",
+    "project_id": "meet-396d5",
+    "storage_bucket": "meet-396d5.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:235935560901:android:4720a70deb25e7fcb3acac",
+        "mobilesdk_app_id": "1:596535302134:android:128efb8b6b758a13d819d7",
         "android_client_info": {
-          "package_name": "com.example.ubon_application"
+          "package_name": "com.example.ubon"
         }
       },
       "oauth_client": [
         {
-          "client_id": "235935560901-hcntlu6qdo79i87aa3d9eml5i09idsus.apps.googleusercontent.com",
+          "client_id": "596535302134-vkgjnjqsvge37kcs6ecdungjil1vc5vj.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.ubon_application",
+            "package_name": "com.example.ubon",
             "certificate_hash": "d7645aee2e11ed199f9870c01fa96978bae8df51"
           }
         },
         {
-          "client_id": "235935560901-7c1gsa252jjheri8k8gcu8gbjcqs3mot.apps.googleusercontent.com",
+          "client_id": "596535302134-1rvd1blsclrab3aifi0g9sfvnhupa3cd.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCMXs8KtY6u0UCxjisFWQO6OMde3jRf6kw"
+          "current_key": "AIzaSyAhJjaun8BF9H-F1xVlaZ5Vi4-7x_e_l2o"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "235935560901-3ere23jrmqtm7lc2cr68kd4sde4h43qm.apps.googleusercontent.com",
+              "client_id": "596535302134-1rvd1blsclrab3aifi0g9sfvnhupa3cd.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "235935560901-s6gg0fcp1hng2sfe06ljinp5rrcfq0c5.apps.googleusercontent.com",
+              "client_id": "596535302134-lsek24ir921uf29li61h4opb5qrlsg7f.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.example.ubonApplication"
