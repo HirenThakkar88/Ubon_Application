@@ -4,6 +4,29 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+class CustomLoader {
+  static Future<void> showLoaderForTask({
+    required BuildContext context,
+    required Future<void> Function() task,
+  }) async {
+    // Show loading overlay
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(child: CircularProgressIndicator()),
+    );
+
+    // Execute the task
+    try {
+      await task();
+    } finally {
+      // Remove the loading overlay
+      Navigator.of(context).pop();
+    }
+  }
+}
 
 class AddCategoryScreen extends StatefulWidget {
   @override
@@ -13,7 +36,6 @@ class AddCategoryScreen extends StatefulWidget {
 class _AddCategoryScreenState extends State<AddCategoryScreen> {
   final TextEditingController _categoryNameController = TextEditingController();
   File? _image;
-  String? _imageUrl;
 
   // Function to pick an image
   Future<void> _pickImage() async {
@@ -43,46 +65,41 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     }
   }
 
-  // Function to add category to Firestore
+  // Function to add category to Firestore with loader and toast
   Future<void> _addCategory() async {
     if (_categoryNameController.text.isEmpty || _image == null) {
-      // Show error message if name or image is not provided
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill in all fields")),
-      );
+      Fluttertoast.showToast(msg: "Please fill in all fields");
       return;
     }
 
-    try {
-      String? imageUrl = await _uploadImage();
-      if (imageUrl != null) {
-        await FirebaseFirestore.instance.collection('categories').add({
-          'categoryName': _categoryNameController.text,
-          'imageUrl': imageUrl,
-          'createdAt': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
-        });
+    await CustomLoader.showLoaderForTask(
+      context: context,
+      task: () async {
+        try {
+          String? imageUrl = await _uploadImage();
+          if (imageUrl != null) {
+            await FirebaseFirestore.instance.collection('categories').add({
+              'categoryName': _categoryNameController.text,
+              'imageUrl': imageUrl,
+              'createdAt': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
+            });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Category added successfully")),
-        );
+            Fluttertoast.showToast(msg: "Category added successfully");
 
-        // Clear the fields after submission
-        _categoryNameController.clear();
-        setState(() {
-          _image = null;
-        });
-      } else {
-        // Show error if image URL is not returned
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to upload image")),
-        );
-      }
-    } catch (e) {
-      print("Error adding category: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to add category")),
-      );
-    }
+            // Clear the fields after submission
+            _categoryNameController.clear();
+            setState(() {
+              _image = null;
+            });
+          } else {
+            Fluttertoast.showToast(msg: "Failed to upload image");
+          }
+        } catch (e) {
+          print("Error adding category: $e");
+          Fluttertoast.showToast(msg: "Failed to add category");
+        }
+      },
+    );
   }
 
   @override
@@ -195,7 +212,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onPressed: _addCategory, // Submit action
+                    onPressed: _addCategory, // Submit action with loader
                     child: Text(
                       'Submit',
                       style: TextStyle(

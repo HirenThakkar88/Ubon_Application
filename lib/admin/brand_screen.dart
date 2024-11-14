@@ -1,6 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:ubon_application/admin_all_sceens/adminCustomLoader.dart';
+// Import CustomLoader if it’s in a separate file
+
+import '../admin_all_sceens/addBrandScreen.dart';
 
 class BrandScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -17,14 +22,34 @@ class BrandScreen extends StatelessWidget {
     }
   }
 
-  // Method to delete brand
-  Future<void> _deleteBrand(String brandId) async {
-    try {
-      await _firestore.collection('brands').doc(brandId).delete();
-      print("Brand deleted successfully");
-    } catch (e) {
-      print("Error deleting brand: $e");
-    }
+  // Method to delete brand with loader
+  Future<void> _deleteBrand(BuildContext context, String brandId) async {
+    await CustomLoader.showLoaderForTask(
+      context: context,
+      task: () async {
+        try {
+          await _firestore.collection('brands').doc(brandId).delete();
+          Fluttertoast.showToast(msg: "Brand deleted successfully");
+        } catch (e) {
+          Fluttertoast.showToast(msg: "Error deleting brand: $e");
+          //print();
+        }
+      },
+    );
+  }
+
+  // Refresh brands list with loader
+  Future<void> _refreshPage(BuildContext context) async {
+    await CustomLoader.showLoaderForTask(
+      context: context,
+      task: () async {
+        // Add delay or any additional operations to simulate a refresh
+        await Future.delayed(Duration(seconds: 1));
+        Fluttertoast.showToast(msg: "Page refreshed successfully");
+
+        //print("");
+      },
+    );
   }
 
   @override
@@ -59,8 +84,8 @@ class BrandScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh, color: Colors.grey),
-            onPressed: () {
-              // Refresh action
+            onPressed: () async {
+              await _refreshPage(context); // Use refresh loader
             },
           ),
           SizedBox(width: 10),
@@ -177,7 +202,7 @@ class BrandScreen extends StatelessWidget {
                               );
 
                               if (confirmDelete == true) {
-                                await _deleteBrand(brandId); // Delete brand
+                                await _deleteBrand(context, brandId); // Delete brand with loader
                               }
                             }),
                           ]);
@@ -194,10 +219,10 @@ class BrandScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Color(0xFFFFCC00),
         onPressed: () {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => AddBrandScreen()),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddBrandScreen()),
+          );
           // Add new brand action
         },
         icon: Icon(Icons.add),

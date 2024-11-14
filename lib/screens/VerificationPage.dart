@@ -255,9 +255,9 @@ class _VerificationPageState extends State<VerificationPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFCC00),
                       padding:
-                          EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+                          EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(25),
                       ),
                     ),
                     child: Text(

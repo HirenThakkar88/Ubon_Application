@@ -81,7 +81,9 @@ class _SplashScreenState extends State<SplashScreen> {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 20),
-            Text("Welcom to Shree Marketing...",style: TextStyle(color: Colors.black,fontFamily: "Lora",fontSize: 22),)
+            Text("Welcome to Shree Marketing...",style: TextStyle(color: Colors.black,fontFamily: "Lora",
+                fontWeight: FontWeight.bold,
+                fontSize: 22),)
             // const CircularProgressIndicator(),
           ],
         ),

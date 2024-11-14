@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:ubon_application/admin_all_sceens/addBrandScreen.dart';
+// Import CustomLoader if it’s in a separate file
 
 import '../admin_all_sceens/addCategoryScreen.dart';
+
 
 class CategoryScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -19,14 +23,36 @@ class CategoryScreen extends StatelessWidget {
     }
   }
 
-  // Method to delete category
-  Future<void> _deleteCategory(String categoryId) async {
-    try {
-      await _firestore.collection('categories').doc(categoryId).delete();
-      print("Category deleted successfully");
-    } catch (e) {
-      print("Error deleting category: $e");
-    }
+  // Method to delete category with loader
+  Future<void> _deleteCategory(BuildContext context, String categoryId) async {
+    await CustomLoader.showLoaderForTask(
+      context: context,
+      task: () async {
+        try {
+          await _firestore.collection('categories').doc(categoryId).delete();
+          Fluttertoast.showToast(msg: "Category deleted successfully");
+
+          //print("");
+        } catch (e) {
+          Fluttertoast.showToast(msg: "Error deleting category: $e");
+          //print("");
+        }
+
+      },
+    );
+  }
+
+  // Refresh categories list with loader
+  Future<void> _refreshPage(BuildContext context) async {
+    await CustomLoader.showLoaderForTask(
+      context: context,
+      task: () async {
+        // Add delay or any additional operations to simulate a refresh
+        await Future.delayed(Duration(seconds: 1));
+        Fluttertoast.showToast(msg: "Page refreshed successfully");
+       // print("");
+      },
+    );
   }
 
   @override
@@ -61,8 +87,8 @@ class CategoryScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh, color: Colors.grey),
-            onPressed: () {
-              // Refresh action
+            onPressed: () async {
+              await _refreshPage(context); // Use refresh loader
             },
           ),
           SizedBox(width: 10),
@@ -165,7 +191,7 @@ class CategoryScreen extends StatelessWidget {
                               );
 
                               if (confirmDelete == true) {
-                                await _deleteCategory(categoryId); // Delete category
+                                await _deleteCategory(context, categoryId); // Delete category with loader
                               }
                             }),
                           ]);

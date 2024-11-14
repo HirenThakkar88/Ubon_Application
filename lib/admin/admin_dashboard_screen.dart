@@ -74,7 +74,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 MaterialPageRoute(builder: (context) => CategoryScreen()),
               );
             }),
-            buildDrawerItem(Icons.subtitles, 'Sub Category'),
+            //buildDrawerItem(Icons.subtitles, 'Sub Category'),
             buildDrawerItem(Icons.category, 'Brands', () {
               Navigator.push(
                 context,
