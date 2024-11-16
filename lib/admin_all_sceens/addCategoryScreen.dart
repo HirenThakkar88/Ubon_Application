@@ -78,7 +78,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
         try {
           String? imageUrl = await _uploadImage();
           if (imageUrl != null) {
-            await FirebaseFirestore.instance.collection('categories').add({
+            DocumentReference categoryRef = FirebaseFirestore.instance.collection('categories').doc();
+            await categoryRef.set({
+              'categoryId': categoryRef.id, // Set the generated document ID as categoryId
               'categoryName': _categoryNameController.text,
               'imageUrl': imageUrl,
               'createdAt': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),

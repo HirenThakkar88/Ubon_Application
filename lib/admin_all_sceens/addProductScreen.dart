@@ -104,9 +104,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
     try {
       // Upload images first
       await uploadImages();
+      // Create a new document reference in Firestore
+      DocumentReference productRef = FirebaseFirestore.instance.collection('products').doc();
 
       // Prepare product data
       Map<String, dynamic> productData = {
+        'productId': productRef.id, // Use the document ID as the productId
         'productName': productNameController.text,
         'description': descriptionController.text,
         'price': double.parse(priceController.text),
@@ -119,7 +122,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       };
 
       // Save product data to Firestore
-      await FirebaseFirestore.instance.collection('products').add(productData);
+      await productRef.set(productData);
       Fluttertoast.showToast(msg: "Product added successfully", toastLength: Toast.LENGTH_SHORT);
 
 

@@ -9,11 +9,23 @@ class AllProductsScreen extends StatelessWidget {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('products').get();
       return querySnapshot.docs.map((doc) {
-        return doc.data() as Map<String, dynamic>;
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // Include the document ID for deletion
+        return data;
       }).toList();
     } catch (e) {
       print("Error fetching products: $e");
       return [];
+    }
+  }
+
+  // Method to delete a product from Firestore
+  Future<void> _deleteProduct(String productId) async {
+    try {
+      await _firestore.collection('products').doc(productId).delete();
+      print('Product deleted: $productId');
+    } catch (e) {
+      print("Error deleting product: $e");
     }
   }
 
@@ -55,6 +67,7 @@ class AllProductsScreen extends StatelessWidget {
               double price = product['price'] ?? 0.0;
               double offerPrice = product['offerPrice'] ?? price; // Use offer price if available, otherwise the original price
               int quantity = product['quantity'] ?? 0;
+              String productId = product['id']; // Get the document ID for deletion
 
               return Card(
                 margin: EdgeInsets.all(10),
@@ -78,9 +91,19 @@ class AllProductsScreen extends StatelessWidget {
                     ],
                   ),
                   isThreeLine: true,
-                  onTap: () {
-                    // You can navigate to a detailed product screen if needed
-                  },
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      bool confirm = await _showDeleteConfirmation(context, name);
+                      if (confirm) {
+                        await _deleteProduct(productId);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('$name deleted')),
+                        );
+                        // Trigger a rebuild by using a StatefulWidget or refreshing the FutureBuilder
+                      }
+                    },
+                  ),
                 ),
               );
             },
@@ -89,5 +112,27 @@ class AllProductsScreen extends StatelessWidget {
       ),
     );
   }
-}
 
+  // Show confirmation dialog before deleting
+  Future<bool> _showDeleteConfirmation(BuildContext context, String productName) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Product'),
+        content: Text('Are you sure you want to delete "$productName"?'),
+        actions: [
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          ElevatedButton(
+            child: Text('Delete'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+  }
+}

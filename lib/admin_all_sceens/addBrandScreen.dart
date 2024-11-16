@@ -40,12 +40,13 @@ class _AddBrandScreenState extends State<AddBrandScreen> {
       context: context,
       task: () async {
         try {
-          await FirebaseFirestore.instance.collection('brands').add({
+          DocumentReference brandRef = FirebaseFirestore.instance.collection('brands').doc();
+          await brandRef.set({
+            'brandId': brandRef.id, // Set the generated document ID as brandId
             'brandName': brandName,
             'status': status,
             'createdAt': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
           });
-
           Fluttertoast.showToast(msg: "Brand added successfully");
 
           // Clear the fields after submission

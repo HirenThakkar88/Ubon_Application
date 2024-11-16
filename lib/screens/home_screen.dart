@@ -1,13 +1,75 @@
-// ignore_for_file: unused_element
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import SystemChrome
 import 'package:ubon_application/screens/shop_screen.dart';
-import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
+import '../widgets/custom_bottom_nav_bar.dart';
+import 'CategoryProductsScreen.dart';
+import 'NewProductsScreen.dart';
+import 'ProductDetailScreen.dart';
+import 'allCategoryScreen.dart'; // Import the custom bottom nav bar
 
-class HomeScreen extends StatelessWidget {
-  //const HomeScreen({Key? key}) : super(key: key);
+class HomeScreen extends StatefulWidget {
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+
+  // Fetch products by category
+  Stream<List<Map<String, dynamic>>> fetchProductsByCategory(String categoryName) {
+    return FirebaseFirestore.instance
+        .collection('products')
+        .where('category', isEqualTo: categoryName) // Filter by category
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+  }
+
+
+  // Fetch products by category
+  Stream<List<Map<String, dynamic>>> fetchNewProducts() {
+    return FirebaseFirestore.instance
+        .collection('products')
+        .orderBy('createdAt', descending: true) // Order by newest first
+        .limit(10) // Limit to the latest 10 products, adjust as needed
+        .snapshots()
+        .map((snapshot) =>
+        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+  }
+
+  // Fetch categories from Firestore
+  Stream<List<Map<String, dynamic>>> fetchCategories() {
+    return FirebaseFirestore.instance
+        .collection('categories')
+        .snapshots()
+        .map((snapshot) =>
+        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+  }
+
+  // Fetch background image URL from Firestore
+  Future<String?> fetchBackgroundImageUrl() async {
+    try {
+      // Get the document from 'backgroundphoto' collection
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('backgroundphoto')
+          .doc('SI7jPaMoRObhD7uYOBjl')  // Use the correct document ID or query
+          .get();
+
+      // Check if the document exists and contains the 'imageUrls' field
+      if (snapshot.exists && snapshot.data() != null) {
+        String imageUrl = snapshot.get('imageUrls');
+        return imageUrl; // Return the string URL directly
+      }
+    } catch (e) {
+      print('Error fetching background image URL: $e');
+    }
+    return null;
+  }
+
+  Future<void> _refreshPage() async {
+    // Add any specific actions to refresh data, like re-fetching data from Firestore.
+    await Future.delayed(Duration(seconds: 2)); // Simulate a delay for loading
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,237 +77,276 @@ class HomeScreen extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge,
         overlays: [SystemUiOverlay.top]);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor:
-          Color.fromARGB(0, 255, 255, 255), // Semi-transparent white
+      statusBarColor: Color.fromARGB(0, 255, 255, 255), // Semi-transparent white
       statusBarIconBrightness: Brightness.dark, // Icon color to light
       statusBarBrightness: Brightness.light, // Status bar text color to light
-      systemNavigationBarColor:
-          Colors.transparent, // Transparent navigation bar
-      systemNavigationBarIconBrightness:
-          Brightness.dark, // Navigation icons light
+      systemNavigationBarColor: Colors.transparent, // Transparent navigation bar
+      systemNavigationBarIconBrightness: Brightness.dark, // Navigation icons light
     ));
 
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Top Image Section for "Item Sale"
-            Stack(
-              children: [
-                Container(
-                  height: 500,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(
-                          'assets/images/Main_page_image.jpg'), // Replace with your image
-                      fit: BoxFit.cover,
+      body: RefreshIndicator(
+        onRefresh:  () async {
+          // Print a message to the console
+          print("Page is being refreshed...");
+
+          // Call the function to fetch data
+          await _refreshPage();
+        },
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Top Image Section for "Item Sale"
+              FutureBuilder<String?>(
+                future: fetchBackgroundImageUrl(), // Fetch the background image URL
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Error loading image'));
+                  }
+
+                  if (snapshot.hasData && snapshot.data != null) {
+                    // Use the image URL from Firebase Storage
+                    return Stack(
+                      children: [
+                        Container(
+                          height: 500,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(snapshot.data!), // Use the dynamic URL here
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 50,
+                          left: 20,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'All Products',
+                                style: TextStyle(
+                                  fontFamily: 'Lora',
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              ElevatedButton(
+                                onPressed: () {
+                                  goToProduct(context);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFFCC00),
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Check',
+                                  style: TextStyle(
+                                    fontFamily: 'Lora',
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return const Center(child: Text('No image found'));
+                },
+              ),            // Other widgets go here (e.g., Product Grid/List View)
+
+
+          // New Items Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'New',
+                      style: TextStyle(
+                        fontFamily: 'Lora',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ),
-                // "Item sale" Text Positioned and Styled
-                Positioned(
-                  bottom: 50,
-                  left: 20,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'All Products',
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to the NewProductsScreen to view all products
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Newproductsscreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'View all',
                         style: TextStyle(
-                          fontFamily: 'Lora',
-                          fontSize: 40,
+                          color: Colors.grey,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontStyle: FontStyle.italic, // Apply italic style
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          goToProduct(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(
-                              0xFFFFCC00), // Set the button color to your preferred yellow
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: const Text(
-                          'Check',
-                          style: TextStyle(
-                            fontFamily: 'Lora',
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
 
-            // New Items Section
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'New',
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      print('View all pressed!');
-                    },
-                    child: const Text(
-                      'View all',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+              // New Items Horizontal List from Firestore
+              SizedBox(
+                height: 300,
 
-            // New Items Horizontal List
-            SizedBox(
-              height:
-                  280, // Adjusted height for taller card to accommodate stars and price
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildNewItemCard('assets/images/item_first.jpg',
-                      'HeadPhones', 15, 12, 4.5),
-                  _buildNewItemCard('assets/images/item_second.jpeg',
-                      'Thunder Bass', 20, 18, 4.0),
-                  _buildNewItemCard('assets/images/item_third.png',
-                      'PowerBank + Charger', 25, 22, 5.0),
-                  _buildNewItemCard('assets/images/item_fourth.png',
-                      'Ear Sound', 18, 15, 3.5),
-                ],
+                child:
+                StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: fetchNewProducts(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error loading products'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(child: Text('No new products available'));
+                    }
+
+                    final products = snapshot.data!;
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return GestureDetector(
+                          onTap: () {
+                            // Navigate to product detail screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProductDetailScreen(product: product),
+                              ),
+                            );
+                          },
+
+                        child:  _buildNewItemCard(
+                          product['imageUrls'][0] ?? 'assets/images/placeholder.jpg',
+                          product['productName'] ?? 'No Name',
+                          product['price'] ?? 0.0,
+                          product['offerPrice'] ?? 0.0,
+                          product['category'] ?? 'No Category', // Pass the category name here
+                        ),
+                        );
+                      },
+                    );
+                  },
+                ),
+
               ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Headphones',
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      print('View all pressed!');
-                    },
-                    child: const Text(
-                      'View all',
+
+              // Categories Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Categories',
                       style: TextStyle(
-                        color: Colors.grey,
+                        fontFamily: 'Lora',
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(
-              height:
-                  280, // Adjusted height for taller card to accommodate stars and price
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildNewItemCard('assets/images/image_fifth.png',
-                      'HeadPhones', 15, 12, 4.5),
-                  _buildNewItemCard('assets/images/item_second.jpeg',
-                      'Thunder Bass', 20, 18, 4.0),
-                  _buildNewItemCard('assets/images/item_third.png',
-                      'PowerBank + Charger', 25, 22, 5.0),
-                  _buildNewItemCard('assets/images/item_fourth.png',
-                      'Ear Sound', 18, 15, 3.5),
-                ],
-              ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Wired Earphones',
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      print('View all pressed!');
-                    },
-                    child: const Text(
-                      'View all',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                            builder: (context) => AllCategoriesScreen(), // Your new screen
+                        ),
+                        );
+                        //print('View all pressed!');
+                      },
+                      child: const Text(
+                        'View all',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            SizedBox(
-              height:
-                  280, // Adjusted height for taller card to accommodate stars and price
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildNewItemCard('assets/images/image_fifth.png',
-                      'HeadPhones', 15, 12, 4.5),
-                  _buildNewItemCard('assets/images/item_second.jpeg',
-                      'Thunder Bass', 20, 18, 4.0),
-                  _buildNewItemCard('assets/images/item_third.png',
-                      'PowerBank + Charger', 25, 22, 5.0),
-                  _buildNewItemCard('assets/images/item_fourth.png',
-                      'Ear Sound', 18, 15, 3.5),
-                ],
+
+              // Categories List from Firestore
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: fetchCategories(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error loading categories'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No categories available'));
+                  }
+
+                  final categories = snapshot.data!.take(4).toList();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    child: GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 6,
+                        mainAxisSpacing: 6,
+                        childAspectRatio: 1.0,
+                      ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final category = categories[index];
+                        return _buildCategoryCard(
+
+                          category['categoryName'] ?? 'No Name',
+                          category['imageUrl'] ?? 'assets/images/placeholder.jpg',
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
-      ), // Bottom Navigation Bar
+      ),
     );
   }
 
   // Widget to build individual new item cards
-  Widget _buildNewItemCard(String imagePath, String label, double originalPrice,
-      double discountedPrice, double rating) {
+  Widget _buildNewItemCard(
+      String imagePath, String label, double originalPrice, double discountedPrice, String categoryName) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
-        width: 160, // Adjusted width for a proportional look
+        width: 160,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           color: Colors.white,
@@ -254,7 +355,7 @@ class HomeScreen extends StatelessWidget {
               color: Colors.grey.withOpacity(0.5),
               spreadRadius: 2,
               blurRadius: 5,
-              offset: const Offset(0, 3), // changes position of shadow
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -265,13 +366,23 @@ class HomeScreen extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(15),
-                      topRight: Radius.circular(15)),
-                  child: Image.asset(
-                    imagePath,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                      topLeft: Radius.circular(15), topRight: Radius.circular(15)),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Get the screen size using MediaQuery
+                      double screenWidth = MediaQuery.of(context).size.width;
+
+                      // Calculate responsive height for the image (50% of screen width as an example)
+                      double imageHeight = screenWidth * 0.45;
+                      return Center(
+                        child: Image.network(
+                          imagePath,
+                          height: imageHeight, // Set the height based on the screen width
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 // "New" label on top of the image
@@ -279,8 +390,7 @@ class HomeScreen extends StatelessWidget {
                   top: 10,
                   left: 10,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(8),
@@ -288,6 +398,7 @@ class HomeScreen extends StatelessWidget {
                     child: const Text(
                       'New',
                       style: TextStyle(
+                        fontFamily: 'Lora',
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
@@ -295,62 +406,81 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Favorite icon in the top-right corner
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: GestureDetector(
+                    onTap: () {
+                      // Add logic to handle adding to favorites
+                      print('Favorite icon clicked for $label');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 3,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.favorite_border,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              child: Text(
+                label,
+                maxLines: 1, // Limit to 1 line
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: 'Lora',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              child: Text(
+                categoryName, // Display the category name here
+                style: const TextStyle(
+                  fontFamily: 'Lora',
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              child: Row(
                 children: [
                   Text(
-                    label,
+                    '\₹${originalPrice.toStringAsFixed(2)}',
                     style: const TextStyle(
-                      fontFamily: 'Lora',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
+                      color: Colors.grey,
+                      decoration: TextDecoration.lineThrough,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 4.0, // Add spacing between icons and text
-                    children: [
-                      for (int i = 0; i < rating.floor(); i++)
-                        const Icon(Icons.star, color: Colors.orange, size: 16),
-                      if (rating - rating.floor() >= 0.5)
-                        const Icon(Icons.star_half,
-                            color: Colors.orange, size: 16),
-                      for (int i = rating.ceil(); i < 5; i++)
-                        const Icon(Icons.star_border,
-                            color: Colors.orange, size: 16),
-                      Text(
-                        '($rating)',
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
-                        '\$$originalPrice',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '\$$discountedPrice',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 8),
+                  Text(
+                    '\₹${discountedPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
                   ),
                 ],
               ),
@@ -360,6 +490,65 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-   goToProduct(BuildContext context) => Navigator.push(
-  context, MaterialPageRoute(builder: (context) => const ShopScreen()));
+
+
+
+  // Widget to build individual category cards
+  Widget _buildCategoryCard(String categoryName, String categoryImage) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to the category-specific product screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryProductsScreen(categoryName: categoryName),
+          ),
+        );
+      },
+      child: Card(
+        color: Colors.white,
+
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 5,
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                  ),
+                  child: Image.network(
+                    categoryImage,
+                    width: 130,
+                    height: 130,
+                    //width: double.infinity,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                categoryName,
+                style: const TextStyle(fontFamily: 'Lora', fontSize: 16, fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Method to navigate to product details screen
+  void goToProduct(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ShopScreen()), // Adjust this route
+    );
+  }
 }
