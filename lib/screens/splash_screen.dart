@@ -13,39 +13,30 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 7),
-        _navigateBasedOnState
-    ); // Adjust delay if needed
+    Future.delayed(Duration(seconds: 7), _navigateBasedOnState);
   }
 
   Future<void> _navigateBasedOnState() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Check if it is the user's first time
     bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
 
     if (isFirstTime) {
-      // Set `isFirstTime` to false after the first launch
       await prefs.setBool('isFirstTime', false);
-
-      // Navigate to LoginScreen if it’s the first time
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } else {
-      // Check if the user is already logged in
       final email = prefs.getString('email');
       final uid = prefs.getString('uid');
       final admin = prefs.getString('admin');
 
       if (email != null && uid != null) {
-        // User is logged in, navigate to HomeScreen or AdminDashboardScreen
-        if(admin == "true") {
+        if (admin == "true") {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => AdminDashboardScreen()),
@@ -57,7 +48,6 @@ class _SplashScreenState extends State<SplashScreen> {
           );
         }
       } else {
-        // User is not logged in, navigate to LoginScreen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -68,23 +58,34 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Retrieve screen dimensions
+    final size = MediaQuery.of(context).size;
+    final double height = size.height;
+    final double width = size.width;
+
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Lottie animation
+            // Lottie animation with responsive dimensions
             Lottie.asset(
               'assets/animations/splash.json',
-              width: 230,
-              height: 230,
+              width: width * 0.6, // 60% of the screen width
+              height: height * 0.3, // 30% of the screen height
               fit: BoxFit.contain,
             ),
-            const SizedBox(height: 20),
-            Text("Welcome to Shree Marketing...",style: TextStyle(color: Colors.black,fontFamily: "Lora",
+            SizedBox(height: height * 0.02), // Spacing based on screen height
+            Text(
+              "Welcome to Shree Marketing...",
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: "Lora",
                 fontWeight: FontWeight.bold,
-                fontSize: 22),)
-            // const CircularProgressIndicator(),
+                fontSize: width * 0.055, // Font size based on screen width
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

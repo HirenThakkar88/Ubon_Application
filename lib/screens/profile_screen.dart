@@ -1,4 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import 'package:ubon_application/screens/login_screen.dart';
@@ -6,8 +10,96 @@ import 'package:ubon_application/screens/payment_method_screen.dart';
 import 'package:ubon_application/widgets/custom_bottom_nav_bar.dart';
 import 'ShippingAddressScreen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedIndex = 4;
+  Authservice _auth = Authservice();
+  String? userName;
+  String? userEmail;
+  String? profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  void fetchUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final authId = prefs.getString('uid'); // Assuming 'uid' is saved in prefs
+
+    if (authId != null) {
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('authentication')
+            .where('auth_id', isEqualTo: authId)
+            .limit(1)
+            .get()
+            .then((snapshot) => snapshot.docs.first);
+
+        setState(() {
+          userName = userDoc['name'];
+          userEmail = userDoc['email'];
+          profileImageUrl = userDoc['profileImageUrl'] ??
+              'assets/images/avtar_default.png'; // Fallback to default image
+        });
+      } catch (e) {
+        print('Error fetching user data: $e');
+      }
+    }
+  }
+
+  Future<void> uploadProfileImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile == null) return; // User did not pick an image
+
+    final prefs = await SharedPreferences.getInstance();
+    final authId = prefs.getString('uid');
+    if (authId == null) return;
+
+    try {
+      final File imageFile = File(pickedFile.path);
+
+      // Upload the image to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child('$authId.jpg');
+      await storageRef.putFile(imageFile);
+
+      // Get the download URL of the uploaded image
+      final String downloadUrl = await storageRef.getDownloadURL();
+
+      // Update the Firestore document with the new image URL
+      final userDoc = await FirebaseFirestore.instance
+          .collection('authentication')
+          .where('auth_id', isEqualTo: authId)
+          .limit(1)
+          .get()
+          .then((snapshot) => snapshot.docs.first);
+
+      await userDoc.reference.update({'profileImageUrl': downloadUrl});
+
+      setState(() {
+        profileImageUrl = downloadUrl;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile picture updated successfully!')),
+      );
+    } catch (e) {
+      print('Error uploading profile image: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update profile picture.')),
+      );
+    }
+  }
 
   void goToLogin(BuildContext context) {
     Navigator.pushReplacement(
@@ -15,9 +107,9 @@ class ProfileScreen extends StatelessWidget {
       MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
+
   @override
   Widget build(BuildContext context) {
-    Authservice _auth = Authservice();
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -47,26 +139,32 @@ class ProfileScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundImage: AssetImage(
-                      'assets/images/profile_pic.png'), // Replace with your image
+                GestureDetector(
+                  onTap: uploadProfileImage,
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage: profileImageUrl != null &&
+                        profileImageUrl!.startsWith('http')
+                        ? NetworkImage(profileImageUrl!)
+                        : AssetImage('assets/images/avtar_default.png')
+                    as ImageProvider,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      'Hiren Thakkar',
-                      style: TextStyle(
+                      userName ?? 'Loading...',
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 22,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      'hpopat503@rku.ac.in',
-                      style: TextStyle(
+                      userEmail ?? 'Loading...',
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
                       ),
@@ -159,7 +257,7 @@ class ProfileScreen extends StatelessWidget {
                         return AlertDialog(
                           title: const Text('Sign Out'),
                           content:
-                              const Text('Are you sure you want to sign out?'),
+                          const Text('Are you sure you want to sign out?'),
                           actions: [
                             TextButton(
                               child: const Text('Cancel'),
@@ -172,12 +270,10 @@ class ProfileScreen extends StatelessWidget {
                               onPressed: () async {
                                 await _auth.signout();
                                 final prefs =
-                                    await SharedPreferences.getInstance();
+                                await SharedPreferences.getInstance();
                                 await prefs.remove('email');
                                 await prefs.remove('uid');
-                               goToLogin(context);
-                                // Place your sign-out code here
-                                // Navigator.of(context).pop();
+                                goToLogin(context);
                               },
                             ),
                           ],
@@ -212,11 +308,8 @@ class ProfileScreen extends StatelessWidget {
       ),
       subtitle: Text(subtitle),
       trailing:
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black),
+      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black),
       onTap: onTap,
     );
   }
-
-  // goToLogin(BuildContext context) => Navigator.push(
-  //     context, MaterialPageRoute(builder: (context) => const LoginScreen()));
 }

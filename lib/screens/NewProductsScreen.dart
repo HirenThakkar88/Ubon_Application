@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'ProductDetailScreen.dart';
 
@@ -19,6 +20,71 @@ class _NewproductsscreenState extends State<Newproductsscreen> {
         .map((snapshot) =>
         snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
   }
+  Future<void> _addToCart({
+    required String productId,
+    required String productName,
+    required String productImage,
+    required String brand,
+    required double price,
+    required String category,
+    required double offerPrice,
+  }) async {
+    try {
+      // Retrieve the user's authId from shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final authId = prefs.getString('uid');
+      if (authId == null) {
+        throw Exception("User not authenticated.");
+      }
+
+      // Retrieve the user's document ID
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('authentication')
+          .where('auth_id', isEqualTo: authId)
+          .get();
+      if (querySnapshot.docs.isEmpty) {
+        throw Exception("User document not found.");
+      }
+
+      final userDocId = querySnapshot.docs.first.id;
+
+      // Define the cart reference
+      final cartRef = FirebaseFirestore.instance
+          .collection('authentication')
+          .doc(userDocId)
+          .collection('cart');
+
+      // Calculate total price
+      int quantity = 1; // Default quantity
+      double totalPrice = quantity * offerPrice;
+
+      // Add product to the cart
+      await cartRef.doc(productId).set({
+        'authId': authId,
+        'productId': productId,
+        'productName': productName,
+        'productImage': productImage,
+        'brand': brand,
+        'price': price,
+        'category': category,
+        'offerPrice': offerPrice,
+        'quantity': quantity,
+        'totalPrice': totalPrice,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$productName has been added to your cart.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add product to cart: $e')),
+      );
+    }
+  }
+
+  //Fluttertoast.showToast(msg: "Invaliad User");
+
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +157,9 @@ class _NewproductsscreenState extends State<Newproductsscreen> {
                       product['price'] ?? 0.0,
                       product['offerPrice'] ?? 0.0,
                       product['category'] ?? 'No Category',
+                      product['rating'] ?? 0.0,
+                        product['productId']??'no',
+                        product['brand']??'no',
                     ),// Pass the category name here
                     );
 
@@ -105,7 +174,7 @@ class _NewproductsscreenState extends State<Newproductsscreen> {
   }
 
   Widget _buildNewItemCard(
-      String imagePath, String label, double originalPrice, double discountedPrice, String categoryName) {
+      String imagePath, String label, double originalPrice, double discountedPrice, String categoryName, dynamic rating,String productId,String brand) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
@@ -161,7 +230,15 @@ class _NewproductsscreenState extends State<Newproductsscreen> {
                   right: 10, // Position the favorite icon on the top-right corner
                   child: GestureDetector(
                     onTap: () {
-                      print('Favorite icon clicked for $label');
+                      _addToCart(
+                        productId: productId,
+                        productName: label,
+                        productImage: imagePath,
+                        brand: brand,
+                        price: originalPrice,
+                        category: categoryName,
+                        offerPrice: discountedPrice,
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.all(6),
@@ -205,6 +282,27 @@ class _NewproductsscreenState extends State<Newproductsscreen> {
                   fontSize: 14,
                   color: Colors.grey,
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.star,
+                    color: Colors.amber,
+                    size: 16,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    '$rating', // Display the rating value
+                    style: TextStyle(
+                      fontFamily: 'Lora',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
             Padding(

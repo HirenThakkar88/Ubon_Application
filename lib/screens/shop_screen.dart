@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
+import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/custom_bottom_nav_bar.dart';
+import 'ProductDetailScreen.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({Key? key}) : super(key: key);
@@ -10,157 +13,113 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   int _selectedIndex = 1;
-  bool isGridView = true; // Toggle between Grid and List view
+  bool isGridView = true;
+  String filterType = 'all'; // Added filterType state variable
 
-  // Sample list of products (you can replace it with your own data)
-  final List<Map<String, dynamic>> _products = [
-    {
-      'image': 'assets/images/item_first.jpg',
-      'title': 'Headphone - Ubon',
-      'rating': 4.5,
-      'reviews': 120,
-      'category': 'Electric',
-      'price': 12.99
-    },
-    {
-      'image': 'assets/images/item_second.jpeg',
-      'title': 'NeckBand - ubon',
-      'rating': 4.2,
-      'reviews': 259,
-      'category': 'Electric',
-      'price': 19.99
-    },
-    {
-      'image': 'assets/images/item_third.png',
-      'title': 'Powerbank + charger',
-      'rating': 4.8,
-      'reviews': 500,
-      'category': 'Electric',
-      'price': 21.99
-    },
-    {
-      'image': 'assets/images/item_fourth.png',
-      'title': 'NeckBand - ubon',
-      'rating': 3.5,
-      'reviews': 430,
-      'category': 'Electric',
-      'price': 15.99
-    },
-    {
-      'image': 'assets/images/image_fifth.png',
-      'title': 'Earpods - Ubon',
-      'rating': 4.7,
-      'reviews': 400,
-      'category': 'Electric',
-      'price': 14.99
-    },
-    {
-      'image': 'assets/images/item_seven.jpeg',
-      'title': 'Data Cable - Ubon',
-      'rating': 4.3,
-      'reviews': 70,
-      'category': 'Electric',
-      'price': 11.99
-    },
-    {
-      'image': 'assets/images/item_eight.jpeg',
-      'title': 'Car Charger - ubon',
-      'rating': 4.3,
-      'reviews': 70,
-      'category': 'Electric',
-      'price': 5.99
-    },
-    {
-      'image': 'assets/images/item_third.png',
-      'title': 'Powerbank + charger',
-      'rating': 4.8,
-      'reviews': 500,
-      'category': 'Electric',
-      'price': 21.99
-    },
-    {
-      'image': 'assets/images/item_seven.jpeg',
-      'title': 'Data Cable - Ubon',
-      'rating': 4.3,
-      'reviews': 70,
-      'category': 'Electric',
-      'price': 11.99
-    },
-  ];
+  // Fetch products by category from Firestore with filter applied
+  Stream<List<Map<String, dynamic>>> fetchProducts() {
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection('products');
 
-  // Function to open the sort options modal bottom sheet
-  void _openSortOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Sort By',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              title: const Text('Popular'),
-              onTap: () {
-                // Handle sorting logic here
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Newest'),
-              onTap: () {
-                // Handle sorting logic here
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Reviews'),
-              onTap: () {
-                // Handle sorting logic here
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Price: High to Low'),
-              onTap: () {
-                // Handle sorting logic here
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Price: Low to High'),
-              onTap: () {
-                // Handle sorting logic here
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
+    // Apply filter based on selected filter type
+    if (filterType == 'newest') {
+      query = query.orderBy('createdAt', descending: true); // Order by timestamp for newest products
+    } else if (filterType == 'highToLow') {
+      query = query.orderBy('offerPrice', descending: true); // Order by price: High to Low
+    } else if (filterType == 'lowToHigh') {
+      query = query.orderBy('offerPrice', descending: false); // Order by price: Low to High
+    }
+
+    return query.snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
   }
+  Future<void> _addToCart({
+    required String productId,
+    required String productName,
+    required String productImage,
+    required String brand,
+    required double price,
+    required String category,
+    required double offerPrice,
+  }) async {
+    try {
+      // Retrieve the user's authId from shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final authId = prefs.getString('uid');
+      if (authId == null) {
+        throw Exception("User not authenticated.");
+      }
+
+      // Retrieve the user's document ID
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('authentication')
+          .where('auth_id', isEqualTo: authId)
+          .get();
+      if (querySnapshot.docs.isEmpty) {
+        throw Exception("User document not found.");
+      }
+
+      final userDocId = querySnapshot.docs.first.id;
+
+      // Define the cart reference
+      final cartRef = FirebaseFirestore.instance
+          .collection('authentication')
+          .doc(userDocId)
+          .collection('cart');
+
+      // Calculate total price
+      int quantity = 1; // Default quantity
+      double totalPrice = quantity * offerPrice;
+
+      // Add product to the cart
+      await cartRef.doc(productId).set({
+        'authId': authId,
+        'productId': productId,
+        'productName': productName,
+        'productImage': productImage,
+        'brand': brand,
+        'price': price,
+        'category': category,
+        'offerPrice': offerPrice,
+        'quantity': quantity,
+        'totalPrice': totalPrice,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$productName has been added to your cart.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add product to cart: $e')),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Products',
           style: TextStyle(
-              color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+              color: Colors.black,
+            fontSize: screenWidth > 600 ? 28 : 24, // Responsive font size
+
+            fontWeight: FontWeight.bold,
+
+          ),
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () {
-              // Handle search button pressed
-            },
-          ),
+          if (screenWidth > 600) // Show the search icon on larger screens
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.black),
+              onPressed: () {
+                // Handle search button pressed
+              },
+            ),
         ],
         backgroundColor: Colors.white,
         elevation: 0,
@@ -168,49 +127,122 @@ class _ShopScreenState extends State<ShopScreen> {
       ),
       body: Column(
         children: [
-          // Filter and Sorting Row
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: const [
-                    Icon(Icons.filter_list, color: Colors.black),
-                    SizedBox(width: 4),
-                    Text('Popular', style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-                Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.swap_vert, color: Colors.black),
-                      onPressed:
-                          _openSortOptions, // Open sort modal when pressed
-                    ),
-                    const SizedBox(width: 90),
-                    IconButton(
-                      icon: isGridView
-                          ? const Icon(Icons.view_list,
-                              color: Colors.black) // List view icon
-                          : const Icon(Icons.grid_view,
-                              color: Colors.black), // Grid view icon
-                      onPressed: () {
-                        setState(() {
-                          isGridView =
-                              !isGridView; // Toggle between Grid and List view
-                        });
-                      },
+                    const Icon(Icons.filter_list, color: Colors.black),
+                    SizedBox(width: 4),
+                    Text(
+                      filterType == 'newest'
+                          ? 'Newest'
+                          : filterType == 'highToLow'
+                          ? 'Price: High to Low'
+                          : filterType == 'lowToHigh'
+                          ? 'Price: Low to High'
+                          : 'Show all', // Default to 'Popular' when no filter is selected
+                      style: TextStyle(
+                        fontSize: MediaQuery.of(context).size.width * 0.04, // Responsive font size
+                      ),
                     ),
                   ],
                 ),
+
+
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.swap_vert, color: Colors.black),
+                          onPressed: () async {
+                            // Open filter dialog
+                            String? selectedFilter = await showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Choose Filter'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ListTile(
+                                        title: const Text('Newest'),
+                                        onTap: () => Navigator.pop(context, 'newest'),
+                                      ),
+                                      ListTile(
+                                        title: const Text('Price: High to Low'),
+                                        onTap: () => Navigator.pop(context, 'highToLow'),
+                                      ),
+                                      ListTile(
+                                        title: const Text('Price: Low to High'),
+                                        onTap: () => Navigator.pop(context, 'lowToHigh'),
+                                      ),
+                                      ListTile(
+                                        title: const Text('Show All'),
+                                        onTap: () => Navigator.pop(context, 'all'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+
+                            if (selectedFilter != null) {
+                              setState(() {
+                                filterType = selectedFilter; // Update filter type
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 30),
+                        IconButton(
+                          icon: isGridView
+                              ? const Icon(Icons.view_list, color: Colors.black)
+                              : const Icon(Icons.grid_view, color: Colors.black),
+                          onPressed: () {
+                            setState(() {
+                              isGridView = !isGridView;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
               ],
+
             ),
           ),
-          // Use Expanded to prevent overflow
+
+          const Divider(
+            color: Colors.grey, // Line color
+            thickness: 0.5,        // Line thickness
+            height: 10,
+
+            // Space around the line
+          ),
           Expanded(
-            child: isGridView ? buildGridView() : buildListView(),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: fetchProducts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return const Center(child: Text('Error loading products'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No products available'));
+                }
+
+                final products = snapshot.data!;
+                return isGridView
+                    ? buildGridView(products)
+                    : buildListView(products);
+              },
+            ),
           ),
         ],
       ),
@@ -220,56 +252,230 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget buildGridView() {
+// GridView and ListView methods remain unchanged.
+
+
+
+  // Build responsive GridView
+  Widget buildGridView(List<Map<String, dynamic>> products) {
+    int crossAxisCount = (MediaQuery.of(context).size.width > 600) ? 3 : 2;
+
     return GridView.builder(
       padding: const EdgeInsets.all(8.0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 10.0,
         childAspectRatio: 0.61,
       ),
-      itemCount: _products.length,
+      itemCount: products.length,
       itemBuilder: (context, index) {
-        final product = _products[index];
-        double price =
-            product['price'] != null ? product['price'] as double : 0.0;
-        return _buildProductCard(
-          product['image'],
-          product['title'],
-          product['rating'],
-          product['reviews'],
-          product['category'],
-          price,
+        final product = products[index];
+        return GestureDetector(
+          onTap: () {
+            // Navigate to ProductDetailScreen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetailScreen(product: product),
+              ),
+            );
+          },
+          child: _buildProductCard(
+            product['imageUrls'][0] ?? 'assets/images/placeholder.jpg',
+            product['productName'] ?? 'No Name',
+            product['rating'] ?? 0.0,
+            product['category'] ?? 'No Category',
+            product['offerPrice'] ?? 0.0,
+            product['price'] ?? 0.0,
+            product['productId']??'no',
+            product['brand']??'no',
+          ),
         );
       },
     );
   }
 
-  Widget buildListView() {
+  // Build ListView
+  Widget buildListView(List<Map<String, dynamic>> products) {
     return ListView.builder(
       padding: const EdgeInsets.all(8.0),
-      itemCount: _products.length,
+      itemCount: products.length,
       itemBuilder: (context, index) {
-        final product = _products[index];
-        double price =
-            product['price'] != null ? product['price'] as double : 0.0;
-        return _buildListItem(
-          product['image'],
-          product['title'],
-          product['rating'],
-          product['reviews'],
-          product['category'],
-          price,
+        final product = products[index];
+        return GestureDetector(
+          onTap: () {
+            // Navigate to ProductDetailScreen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetailScreen(product: product),
+              ),
+            );
+          },
+          child: _buildListItem(
+            product['imageUrls'][0] ?? 'assets/images/placeholder.jpg',
+            product['productName'] ?? 'No Name',
+            product['rating'] ?? 0.0,
+            product['category'] ?? 'No Category',
+            product['offerPrice'] ?? 0.0,
+            product['price'] ?? 0.0,
+              product['productId']??'no',
+              product['brand']??'no',
+
+          ),
         );
       },
     );
   }
 
-  // Function to build individual product cards with price tag for GridView
-  Widget _buildProductCard(String imagePath, String title, double rating,
-      int reviews, String category, double price) {
+  // Product card for GridView
+  Widget _buildProductCard(
+      String imageUrl,
+      String name,
+      dynamic rating,
+      String category,
+      double offerPrice,
+      double price,
+
+      String productId,
+      String brand) {
+    double ratingValue =
+    (rating is double) ? rating : (rating is num) ? rating.toDouble() : 0.0;
+
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
+                child: Image.network(
+                  imageUrl,
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(category,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          ratingValue.toStringAsFixed(1),
+                          style: const TextStyle(fontSize: 12, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        if (offerPrice > 0)
+                          Text(
+                            '\₹${price.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '\₹${offerPrice > 0 ? offerPrice.toStringAsFixed(2) : price.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Positioned Favorite Icon
+        Positioned(
+          top: 10,
+          right: 10,
+          child: GestureDetector(
+            onTap: () {
+              _addToCart(
+                productId: productId,
+                productName: name,
+                productImage: imageUrl,
+                brand: brand,
+                price: price,
+                category: category,
+                offerPrice: offerPrice,
+              );
+              // Add logic to handle adding to favorites
+              //print('Favorite icon clicked for $name');
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 3,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.favorite_border,
+                color: Colors.red,
+                size: 20,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  // ListItem for ListView
+  Widget _buildListItem(String imageUrl, String name, dynamic rating,
+      String category, double offerPrice, double price,String productId, String brand) {
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: Colors.white,
@@ -282,93 +488,101 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(15),
-                  topRight: Radius.circular(15),
-                ),
-                child: Image.asset(
-                  imagePath,
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+          ListTile(
+            contentPadding: const EdgeInsets.all(8.0),
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
               ),
-              Positioned(
-                top: 110,
-                right: 10,
-                child: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 18,
-                  child: IconButton(
-                    icon: const Icon(Icons.favorite_border,
-                        size: 19, color: Colors.red),
-                    onPressed: () {
-                      // Handle favorite button pressed
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
+            ),
+            title: Text(
+              name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Text(
                   category,
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Row(
                   children: [
-                    Wrap(
-                      spacing: 4.0,
-                      children: List.generate(5, (index) {
-                        if (index < rating.floor()) {
-                          return const Icon(Icons.star,
-                              color: Colors.orange, size: 16);
-                        } else if (index == rating.floor() &&
-                            rating - rating.floor() >= 0.5) {
-                          return const Icon(Icons.star_half,
-                              color: Colors.orange, size: 16);
-                        } else {
-                          return const Icon(Icons.star_border,
-                              color: Colors.orange, size: 16);
-                        }
-                      }),
+                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: const TextStyle(fontSize: 12),
                     ),
-                    Text(' ($reviews)',
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Display the price tag
-                Text(
-                  '\$$price',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    if (offerPrice > 0)
+                      Text(
+                        '\₹${price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    const SizedBox(width: 5),
+                    Text(
+                      '\₹${offerPrice > 0 ? offerPrice.toStringAsFixed(2) : price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ],
+            ),
+          ),
+          // Favorite Icon
+          Positioned(
+            top: 10,
+            right: 10,
+            child: GestureDetector(
+              onTap: () {
+                _addToCart(
+                  productId: productId,
+                  productName: name,
+                  productImage: imageUrl,
+                  brand: brand,
+                  price: price,
+                  category: category,
+                  offerPrice: offerPrice,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 3,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.favorite_border,
+                  color: Colors.red,
+                  size: 20,
+                ),
+              ),
             ),
           ),
         ],
@@ -376,97 +590,4 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  // Function to build individual product list items for ListView
-  Widget _buildListItem(String imagePath, String title, double rating,
-      int reviews, String category, double price) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              imagePath,
-              height: 100,
-              width: 100,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  category,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Wrap(
-                      spacing: 4.0,
-                      children: List.generate(5, (index) {
-                        if (index < rating.floor()) {
-                          return const Icon(Icons.star,
-                              color: Colors.orange, size: 16);
-                        } else if (index == rating.floor() &&
-                            rating - rating.floor() >= 0.5) {
-                          return const Icon(Icons.star_half,
-                              color: Colors.orange, size: 16);
-                        } else {
-                          return const Icon(Icons.star_border,
-                              color: Colors.orange, size: 16);
-                        }
-                      }),
-                    ),
-                    Text(' ($reviews)',
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '\$$price',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.red),
-            onPressed: () {
-              // Handle favorite button pressed
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }

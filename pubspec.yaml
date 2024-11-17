@@ -97,6 +97,7 @@ flutter:
       - assets/images/facebook_icon.png
       - assets/images/Main_page_image.jpg
       - assets/images/item_first.jpg
+      - assets/images/avtar_default.png
       - assets/images/item_second.jpeg
       - assets/images/item_third.png
       - assets/images/item_fourth.png

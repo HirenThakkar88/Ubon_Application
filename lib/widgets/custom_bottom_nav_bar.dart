@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/bag_screen.dart';
 import '../screens/favorite_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
@@ -29,6 +30,10 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         MaterialPageRoute(builder: (context) => const ShopScreen()),
       );
     } else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) =>  MyBagScreen()),
+      );
       // Add navigation for the Bag screen if you have one
     } else if (index == 3) {
       Navigator.pushReplacement(

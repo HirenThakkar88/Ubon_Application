@@ -7,6 +7,7 @@ import 'package:ubon_application/screens/wrapper.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Initialize the bindings

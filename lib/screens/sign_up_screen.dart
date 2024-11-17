@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
@@ -23,7 +22,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -37,39 +36,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
       systemNavigationBarIconBrightness: Brightness.light,
     ));
 
+    // MediaQuery dimensions
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 60),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child:
-                            const Icon(Icons.arrow_back, color: Colors.black),
-                      ),
-                    ],
-                  ),
+                SizedBox(height: screenHeight * 0.08),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(Icons.arrow_back, color: Colors.black),
                 ),
-                const SizedBox(height: 20),
-                const Text(
+                SizedBox(height: screenHeight * 0.03),
+                Text(
                   'Sign Up',
                   style: TextStyle(
                     fontFamily: 'Lora',
-                    fontSize: 32,
+                    fontSize: screenWidth * 0.08,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.05),
                 CustomTextField(
                   label: 'Full Name',
                   hintText: 'XYZ',
@@ -82,7 +78,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.03),
                 CustomTextField(
                   label: 'Email',
                   hintText: 'abcd@gmail.com',
@@ -97,7 +93,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.03),
                 CustomTextField(
                   label: 'Password',
                   hintText: 'Password',
@@ -116,7 +112,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.03),
                 CustomTextField(
                   label: 'Confirm Password',
                   hintText: 'Confirm Password',
@@ -130,7 +126,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight * 0.02),
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
@@ -144,68 +140,69 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
+                        Text(
                           'Already have an account?',
                           style: TextStyle(
                             fontFamily: 'Lora',
+                            fontSize: screenWidth * 0.04,
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 5),
-                        const Icon(
+                        SizedBox(width: screenWidth * 0.02),
+                        Icon(
                           Icons.arrow_forward,
                           color: Colors.red,
-                          size: 18,
+                          size: screenWidth * 0.045,
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.04),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _signup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFCC00),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'SIGN UP',
                       style: TextStyle(
                         fontFamily: 'Lora',
                         color: Colors.black,
-                        fontSize: 18,
+                        fontSize: screenWidth * 0.045,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
-                const Center(
+                SizedBox(height: screenHeight * 0.06),
+                Center(
                   child: Text(
                     'Or login with social account',
                     style: TextStyle(
                       fontFamily: 'Lora',
-                      fontSize: 16,
+                      fontSize: screenWidth * 0.045,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.03),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     SocialButton(imagePath: 'assets/images/google_icon.png'),
-                    SizedBox(width: 30),
+                    SizedBox(width: screenWidth * 0.08),
                     SocialButton(imagePath: 'assets/images/facebook_icon.png'),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.03),
               ],
             ),
           ),
@@ -217,22 +214,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
   goToHome(BuildContext context) => Navigator.push(
       context, MaterialPageRoute(builder: (context) => HomeScreen()));
 
- _signup() async {
-  final fullName = _fullNameController.text.trim();
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
-  final userType = 'regular';  // You can customize this as per your requirement
+  _signup() async {
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final userType = 'regular';
 
-  if (_formKey.currentState?.validate() ?? false) {
-    final user = await _auth.createUserWithEmailAndPassword(
-        email, password, fullName, userType);
+    if (_formKey.currentState?.validate() ?? false) {
+      final user = await _auth.createUserWithEmailAndPassword(
+          email, password, fullName, userType);
 
-    if (user != null) {
-      log("User created and data saved in Firestore");
-      goToHome(context);
-    } else {
-      log("Error creating user");
+      if (user != null) {
+        log("User created and data saved in Firestore");
+        goToHome(context);
+      } else {
+        log("Error creating user");
+      }
     }
   }
-}
 }

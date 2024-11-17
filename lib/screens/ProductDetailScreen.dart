@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductDetailScreen extends StatefulWidget
 {
@@ -146,7 +147,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                 children: [
                   const Icon(Icons.star, color: Colors.orange, size: 20),
                   Text(
-                    '${product['rating'] ?? 0} ',
+                    '${product['rating'] ?? 0.0} ',
                     style: const TextStyle(fontSize: 16, fontFamily: 'lora', fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -159,9 +160,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
               const SizedBox(height: 16),
 
               // Color Options
-              const Text(
-                'Color',
-                style: TextStyle(fontSize: 16, fontFamily: 'lora', fontWeight: FontWeight.bold),
+              Text(
+                  product['category'] ?? 'No Name',
+                style: const TextStyle(fontSize: 16, fontFamily: 'lora', fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               const SizedBox(height: 16),
@@ -211,11 +212,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
+                        try {
+                          final authId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
+                          // Print the authId for debugging
+                          print('User auth_id: $authId');
+
+                          await addToFavourite(
+                            authId: authId,
+                            productName: product['productName'] ?? '',
+                            productImage: (product['imageUrls'] as List<dynamic>?)?.first ?? '',
+                            brand: product['brand'] ?? '',
+                            price: (product['price'] as num?)?.toDouble() ?? 0.0,
+                            offerPrice: (product['offerPrice'] as num?)?.toDouble() ?? 0.0,
+                            quantity: _quantity,
+                            productId: widget.product['productId'] ?? 'unknown_id', category: product['category'] ?? '',
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Product added to cart successfully!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error adding product to cart: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       },
+
                       child: const Text(
-                        'Add to Cart',
+                        'Add to Favourite',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
                       ),
                     ),
@@ -265,6 +297,67 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
       ),
     );
   }
+
+  Future<void> addToFavourite({
+    required String productId,
+    required String productName,
+    required String productImage,
+    required String brand,
+    required String category,
+    required double price,
+    required double offerPrice,
+    required int quantity,
+    required String authId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final authId = prefs.getString('uid');
+
+      if (authId == null || authId.isEmpty) {
+        throw Exception('User is not logged in. Please log in first.');
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('authentication')
+          .where('auth_id', isEqualTo: authId)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        throw Exception('User document not found for authId: $authId');
+      }
+
+      final userDocId = querySnapshot.docs.first.id;
+
+      final double totalPrice = offerPrice * quantity;
+
+      final cartRef = FirebaseFirestore.instance
+          .collection('authentication')
+          .doc(userDocId)
+          .collection('cart');
+
+      await cartRef.doc(productId).set({
+        'authId': authId, // Store the user's auth_id
+        'productId': productId,
+        'productName': productName,
+        'productImage': productImage,
+        'brand': brand,
+        'price': price,
+        'category':category,
+        'offerPrice': offerPrice,
+        'quantity': quantity,
+        'totalPrice': totalPrice,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      print('Product added to cart successfully for authId: $authId');
+    } catch (e) {
+      print('Error adding product to cart for authId: $authId: $e');
+      throw Exception('Failed to add product to cart. Please try again.');
+    }
+  }
+
+
+
 
 
 }

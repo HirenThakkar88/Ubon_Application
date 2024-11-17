@@ -94,7 +94,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
         descriptionController.text.isEmpty ||
         priceController.text.isEmpty ||
         quantityController.text.isEmpty ||
-        selectedImages.isEmpty) {
+        selectedImages.isEmpty ||
+        selectedCategory == null ||
+        selectedBrand == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please fill in all required fields and upload at least one image")),
       );
@@ -104,6 +106,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
     try {
       // Upload images first
       await uploadImages();
+
+      // Fetch the categoryId based on the selectedCategory name
+      String categoryId = await getCategoryId(selectedCategory!);
+
       // Create a new document reference in Firestore
       DocumentReference productRef = FirebaseFirestore.instance.collection('products').doc();
 
@@ -115,6 +121,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         'price': double.parse(priceController.text),
         'quantity': int.parse(quantityController.text),
         'offerPrice': offerPriceController.text.isNotEmpty ? double.parse(offerPriceController.text) : null,
+        'categoryId': categoryId, // Add categoryId here
         'category': selectedCategory,
         'brand': selectedBrand,
         'imageUrls': imageUrls, // Use uploaded image URLs
@@ -124,7 +131,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
       // Save product data to Firestore
       await productRef.set(productData);
       Fluttertoast.showToast(msg: "Product added successfully", toastLength: Toast.LENGTH_SHORT);
-
 
       // Clear fields after submitting
       productNameController.clear();
@@ -143,6 +149,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error adding product")));
     }
   }
+
+// Fetch categoryId based on selectedCategory name
+  Future<String> getCategoryId(String categoryName) async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('categories')
+          .where('categoryName', isEqualTo: categoryName)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.id; // Return the categoryId
+      } else {
+        throw Exception('Category not found');
+      }
+    } catch (e) {
+      print("Error fetching categoryId: $e");
+      throw Exception('Error fetching categoryId');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
