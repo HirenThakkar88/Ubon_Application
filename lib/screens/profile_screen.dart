@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import 'package:ubon_application/screens/login_screen.dart';
 import 'package:ubon_application/screens/payment_method_screen.dart';
+import 'package:ubon_application/screens/setting_screen.dart';
+import 'package:ubon_application/screens/trackOrderScreen.dart';
 import 'package:ubon_application/widgets/custom_bottom_nav_bar.dart';
 import 'ShippingAddressScreen.dart';
 
@@ -21,12 +23,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? userName;
   String? userEmail;
   String? profileImageUrl;
+  int addressCount = 0;
+  int orderCount = 0; //
 
   @override
   void initState() {
     super.initState();
     fetchUserData();
+    fetchAddressCount(); //
+    fetchOrderCount();
+    // fetchorderCount(); // Fetch the user's order count
   }
+  void fetchAddressCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final authId = prefs.getString('uid');
+
+    if (authId != null) {
+      try {
+        // Fetch user document directly using the 'auth_id'
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('authentication')
+            .doc(authId) // Directly access the document using the auth_id
+            .get(); // Fetch the document
+
+        // Debug: print the entire document data to check the structure
+        print('User Document Data: ${userDoc.data()}');
+
+        // Check if the 'addresses' field exists and is a list
+        if (userDoc.exists && userDoc['addresses'] != null) {
+          var addresses = userDoc['addresses'];
+          if (addresses is List) {
+            setState(() {
+              addressCount = addresses.length; // Set address count from the list
+            });
+          } else {
+            setState(() {
+              addressCount = 0; // In case 'addresses' is not a list
+            });
+          }
+        } else {
+          setState(() {
+            addressCount = 0; // No addresses available or field is missing
+          });
+        }
+      } catch (e) {
+        print('Error fetching address count: $e');
+        setState(() {
+          addressCount = 0; // Handle errors by setting address count to 0
+        });
+      }
+    }
+  }
+
+  void fetchOrderCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final authId = prefs.getString('uid'); // Get the user's ID
+
+    if (authId != null) {
+      try {
+        // Query the "orders" collection to count the user's orders
+        QuerySnapshot orderSnapshot = await FirebaseFirestore.instance
+            .collection('orders')
+            .where('auth_id', isEqualTo: authId)
+            .get();
+
+        setState(() {
+          orderCount = orderSnapshot.size; // Get the count of documents
+        });
+      } catch (e) {
+        print('Error fetching order count: $e');
+        setState(() {
+          orderCount = 0; // Default to 0 in case of error
+        });
+      }
+    }
+  }
+
 
   void fetchUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -182,16 +254,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildProfileOption(
                   context: context,
                   title: 'My orders',
-                  subtitle: 'Already have 12 orders',
+                  subtitle: 'Already have $orderCount  orders',
                   icon: Icons.list_alt,
                   onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>  MyOrdersScreen ()),
+                    );
                     // Navigate to My Orders page
                   },
                 ),
                 _buildProfileOption(
                   context: context,
                   title: 'Shipping addresses',
-                  subtitle: '3 addresses',
+                  subtitle: '$addressCount addresses',
                   icon: Icons.location_on_outlined,
                   onTap: () {
                     Navigator.push(
@@ -238,6 +315,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   subtitle: 'Notifications, password',
                   icon: Icons.settings_outlined,
                   onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>  SettingsScreen()),
+                    );
                     // Navigate to Settings page
                   },
                 ),
@@ -287,9 +369,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-      ),
+        bottomNavigationBar: CustomBottomNavBar(
+          selectedIndex: _selectedIndex,
+        ),
     );
   }
 

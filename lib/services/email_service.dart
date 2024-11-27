@@ -5,7 +5,7 @@ class EmailService {
   // Method to send OTP email using SMTP with username and password
   static Future<void> sendOTP(String recipientEmail, String otp) async {
     String username = 'hpopat503@rku.ac.in'; // Your email
-    String password = 'kpsw hxwo futz epnn';   // Your email password
+    String password = 'dvod wmhe myke epyw';   // Your email password
 
     // Create an SMTP server
     final smtpServer = SmtpServer('smtp.gmail.com',

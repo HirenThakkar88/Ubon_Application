@@ -5,6 +5,7 @@ import 'package:ubon_application/admin/category_screen.dart';
 import 'package:ubon_application/admin_all_sceens/addProductScreen.dart';
 import 'package:ubon_application/screens/firebase_Auth.dart';
 import 'package:ubon_application/screens/login_screen.dart';
+import 'AllOrderScreen.dart';
 import 'Product_available_screen.dart';
 import 'brand_screen.dart';
 
@@ -161,11 +162,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Expanded(
               child: ListView(
                 children: [
-                  buildOrderTile('All Orders', 0),
-                  buildOrderTile('Pending Orders', 0),
-                  buildOrderTile('Processed Orders', 0),
-                  buildOrderTile('Cancelled Orders', 0),
-                  buildOrderTile('Shipped Orders', 0),
+                  buildOrderTile('All Orders', 0,AllOrdersScreen()),
+                  buildOrderTile('Pending Orders', 0,null),
+                  buildOrderTile('Processed Orders', 0,null),
+                  buildOrderTile('Cancelled Orders', 0,null),
+                  buildOrderTile('Shipped Orders', 0,null),
                 ],
               ),
             ),
@@ -229,7 +230,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget buildOrderTile(String title, int count) {
+  Widget buildOrderTile(String title, int count,Widget? screen) {
     return ListTile(
       leading: Icon(Icons.receipt_long, color: Colors.blueAccent),
       title: Text(
@@ -248,7 +249,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           color: Colors.black,
         ),
       ),
-      onTap: () {},
+      onTap: () {
+        if (screen != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => screen),
+          );
+        }
+
+      },
     );
   }
 

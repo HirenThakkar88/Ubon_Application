@@ -34,7 +34,7 @@ class AllProductsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('All Products'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.white,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fetchProducts(),
@@ -83,9 +83,9 @@ class AllProductsScreen extends StatelessWidget {
                       Text('Brand: $brand'),
                       Text('Category: $category'),
                       Text('Description: $description', maxLines: 2, overflow: TextOverflow.ellipsis),
-                      Text('Price: \$$price'),
+                      Text('Price: \₹$price'),
                       offerPrice < price
-                          ? Text('Offer Price: \$$offerPrice', style: TextStyle(color: Colors.red))
+                          ? Text('Offer Price: \₹$offerPrice', style: TextStyle(color: Colors.red))
                           : SizedBox(),
                       Text('Available Quantity: $quantity'),
                     ],

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ubon_application/screens/shop_screen.dart';
-
 import '../widgets/custom_bottom_nav_bar.dart';
+import 'AddressSelectionScreen.dart';
 
 class MyBagScreen extends StatefulWidget {
   @override
@@ -13,6 +13,8 @@ class MyBagScreen extends StatefulWidget {
 class _MyBagScreenState extends State<MyBagScreen> {
   int _selectedIndex = 2; // Default selected index for bottom nav bar
   List<Map<String, dynamic>> bagItems = [];
+  String? selectedCoupon;
+  double _totalAmount = 0.0;
 
   @override
   void initState() {
@@ -29,6 +31,7 @@ class _MyBagScreenState extends State<MyBagScreen> {
           .where('auth_id', isEqualTo: authId)
           .get();
 
+
       if (querySnapshot.docs.isNotEmpty) {
         final userDocId = querySnapshot.docs.first.id;
         final bagSnapshot = await FirebaseFirestore.instance
@@ -41,7 +44,88 @@ class _MyBagScreenState extends State<MyBagScreen> {
           bagItems = bagSnapshot.docs
               .map((doc) => {'id': doc.id, ...doc.data()})
               .toList();
+          _calculateTotalAmount();
         });
+      }
+    }
+  }
+  void _calculateTotalAmount() {
+    double total = 0.0;
+    for (var item in bagItems) {
+      final double price = item['offerPrice'] ?? 0.0;
+      final int quantity = item['quantity'] ?? 0;
+      total += price * quantity;
+    }
+    setState(() {
+      _totalAmount = total;
+    });
+  }
+
+  Future<void> updateQuantity(String productId, int newQuantity) async {
+    final prefs = await SharedPreferences.getInstance();
+    final authId = prefs.getString('uid');
+    if (authId != null) {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('authentication')
+          .where('auth_id', isEqualTo: authId)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final userDocId = querySnapshot.docs.first.id;
+
+        // Fetch product price
+        final productDoc = await FirebaseFirestore.instance
+            .collection('authentication')
+            .doc(userDocId)
+            .collection('bag')
+            .doc(productId)
+            .get();
+
+        if (productDoc.exists) {
+          final productData = productDoc.data();
+          final double price = productData?['offerPrice'] ?? 0.0;
+          final int oldQuantity = productData?['quantity'] ?? 0;
+
+          // Update the quantity in Firestore
+          await FirebaseFirestore.instance
+              .collection('authentication')
+              .doc(userDocId)
+              .collection('bag')
+              .doc(productId)
+              .update({'quantity': newQuantity});
+
+          // Calculate total price change
+          final double oldTotal = price * oldQuantity;
+          final double newTotal = price * newQuantity;
+          final double totalChange = newTotal - oldTotal;
+
+          // Update total price in `totalPrice` collection
+          final totalPriceDoc = await FirebaseFirestore.instance
+              .collection('authentication')
+              .doc(userDocId)
+              .collection('bag')
+              .doc(productId);
+
+
+          if ((await totalPriceDoc.get()).exists) {
+            await totalPriceDoc.update({
+              'totalPrice': FieldValue.increment(totalChange),
+            });
+          } else {
+            // If totalPrice document doesn't exist, create it
+            await totalPriceDoc.set({'totalPrice': newTotal});
+          }
+
+          // Update local state after Firestore update
+          setState(() {
+            final itemIndex =
+            bagItems.indexWhere((item) => item['id'] == productId);
+            if (itemIndex != -1) {
+              bagItems[itemIndex]['quantity'] = newQuantity;
+            }
+            _calculateTotalAmount();
+          });
+        }
       }
     }
   }
@@ -71,6 +155,7 @@ class _MyBagScreenState extends State<MyBagScreen> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -82,6 +167,7 @@ class _MyBagScreenState extends State<MyBagScreen> {
           "My Bag",
           style: TextStyle(
             color: Colors.black,
+            fontFamily: 'Lora',
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
@@ -98,7 +184,7 @@ class _MyBagScreenState extends State<MyBagScreen> {
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(screenWidth * 0.04), // Dynamic padding
+        padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -108,7 +194,9 @@ class _MyBagScreenState extends State<MyBagScreen> {
                 child: Text(
                   "Your bag is empty",
                   style: TextStyle(
-                    fontSize: 18,
+                    fontFamily: 'Lora',
+
+                    fontSize: screenWidth * 0.045,
                     color: Colors.grey,
                   ),
                 ),
@@ -129,7 +217,7 @@ class _MyBagScreenState extends State<MyBagScreen> {
                         quantity: item['quantity'] ?? 0,
                         screenWidth: screenWidth,
                       ),
-                      SizedBox(height: screenHeight * 0.02), // Dynamic spacing
+                      SizedBox(height: screenHeight * 0.02),
                     ],
                   );
                 },
@@ -139,14 +227,14 @@ class _MyBagScreenState extends State<MyBagScreen> {
               decoration: InputDecoration(
                 hintText: 'Select Coupon Code',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8), // Responsive rounded edges
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ), // Ensure consistent padding
+                contentPadding:  EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.04,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
-              value: null, // Initially no coupon selected
+              value: selectedCoupon,
               items: [
                 DropdownMenuItem(
                   value: 'DISCOUNT10',
@@ -166,12 +254,14 @@ class _MyBagScreenState extends State<MyBagScreen> {
                 ),
               ],
               onChanged: (String? value) {
-                // Handle coupon code selection
-                print('Selected Coupon: $value');
+                setState(() {
+                  selectedCoupon = value;
+                });
               },
               icon: const Icon(Icons.arrow_drop_down),
-              style: const TextStyle(
-                fontSize: 16,
+              style: TextStyle(
+                fontFamily: 'Lora',
+                fontSize: screenWidth * 0.04,
                 color: Colors.black,
               ),
               dropdownColor: Colors.white,
@@ -180,33 +270,57 @@ class _MyBagScreenState extends State<MyBagScreen> {
             SizedBox(height: screenHeight * 0.02),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
+              children:  [
                 Text(
                   'Total amount:',
-                  style: TextStyle(fontSize: 18),
+                  style: TextStyle(fontSize: screenWidth * 0.045,fontFamily: 'Lora',fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '112\$',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  '₹${_totalAmount.toStringAsFixed(2)}', // Dynamically displaying total amount
+                  style: TextStyle(fontSize:screenWidth * 0.045, fontWeight: FontWeight.bold),
                 ),
+
               ],
+
             ),
+            SizedBox(height: screenHeight * 0.02),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children:  [
+                Text(
+                  'Coupen Discount: ',
+                  style: TextStyle(fontSize: screenWidth * 0.045,fontFamily: 'Lora',fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '₹0', // Dynamically displaying total amount
+                  style: TextStyle(fontSize:screenWidth * 0.045, fontWeight: FontWeight.bold),
+                ),
+
+              ],
+
+            ),
+
+
             SizedBox(height: screenHeight * 0.02),
             ElevatedButton(
               onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddressSelectionScreen()),
+                );
                 // Handle checkout logic
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFFCC00),
-                minimumSize: Size(double.infinity, screenHeight * 0.07), // Responsive button height
+                backgroundColor: const Color(0xFFFFCC00),
+                minimumSize: Size(double.infinity, screenHeight * 0.07),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
+              child:  Text(
                 'CHECK OUT',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: screenWidth * 0.04,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                   fontFamily: 'Lora',
@@ -244,17 +358,17 @@ class _MyBagScreenState extends State<MyBagScreen> {
           ),
         ],
       ),
-      padding: EdgeInsets.all(screenWidth * 0.03), // Dynamic padding
+      padding: EdgeInsets.all(screenWidth * 0.04),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Image.network(
             imagePath,
-            width: screenWidth * 0.18, // Dynamic image width
-            height: screenWidth * 0.18, // Dynamic image height
+            width: screenWidth * 0.2,
+            height: screenWidth * 0.2,
             fit: BoxFit.cover,
           ),
-          SizedBox(width: screenWidth * 0.04), // Dynamic spacing
+          SizedBox(width: screenWidth * 0.05),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +377,7 @@ class _MyBagScreenState extends State<MyBagScreen> {
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: screenWidth * 0.045, // Dynamic text size
+                    fontSize: screenWidth * 0.045,
                   ),
                 ),
                 SizedBox(height: screenWidth * 0.01),
@@ -289,7 +403,9 @@ class _MyBagScreenState extends State<MyBagScreen> {
                     Row(
                       children: [
                         _buildCircularButton(Icons.remove, () {
-                          // Decrease quantity logic
+                          if (quantity > 1) {
+                            updateQuantity(productId, quantity - 1);
+                          }
                         }),
                         SizedBox(width: screenWidth * 0.03),
                         Text(
@@ -301,15 +417,15 @@ class _MyBagScreenState extends State<MyBagScreen> {
                         ),
                         SizedBox(width: screenWidth * 0.03),
                         _buildCircularButton(Icons.add, () {
-                          // Increase quantity logic
+                          updateQuantity(productId, quantity + 1);
                         }),
                       ],
                     ),
                     Text(
-                      '\₹$price',
+                      '₹${(price * quantity).toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: screenWidth * 0.045,
+                        fontSize: screenWidth * 0.04,
                       ),
                     ),
                   ],
@@ -348,8 +464,8 @@ class _MyBagScreenState extends State<MyBagScreen> {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        width: 36, // Button size remains fixed for simplicity
-        height: 36,
+        width: 33,
+        height: 35,
         decoration: BoxDecoration(
           color: Colors.grey.shade200,
           shape: BoxShape.circle,
@@ -364,7 +480,7 @@ class _MyBagScreenState extends State<MyBagScreen> {
         child: Center(
           child: Icon(
             icon,
-            size: 20,
+            size: 19,
             color: Colors.red,
           ),
         ),
